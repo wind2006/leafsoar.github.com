@@ -2,12 +2,12 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: http://yoursite.com
-title: My Octopress Blog
-subtitle: A blogging framework for hackers.
-author: Your Name
+url: http://leafsoar.github.io
+title: 无间落叶
+subtitle: 无有入无间 ~
+author: 一叶
 simple_search: http://google.com/search
-description:
+description: 天下至柔 驰骋天下至坚 无间落叶 无有入无间 ~
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
@@ -27,12 +27,14 @@ email:
 
 # If publishing to a subdirectory as in http://site.com/project set 'root: /project'
 root: /
-permalink: /blog/:year/:month/:day/:title/
+# permalink: /blog/:year/:month/:day/:title/
+permalink: /archives/:year/:month-:day.html
 source: source
 destination: public
 plugins: plugins
 code_dir: downloads/code
-category_dir: blog/categories
+# category_dir: blog/categories
+category_dir: archives/category
 markdown: rdiscount
 rdiscount:
   extensions:
@@ -70,7 +72,7 @@ github_skip_forks: true
 
 # Twitter
 twitter_user:
-twitter_tweet_button: true
+twitter_tweet_button: false
 
 # Google +1
 google_plus_one: false

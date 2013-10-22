@@ -4,7 +4,7 @@
   <title><![CDATA[无间落叶]]></title>
   <link href="http://blog.leafsoar.com/atom.xml" rel="self"/>
   <link href="http://blog.leafsoar.com/"/>
-  <updated>2013-10-22T15:35:11+08:00</updated>
+  <updated>2013-10-22T15:45:39+08:00</updated>
   <id>http://blog.leafsoar.com/</id>
   <author>
     <name><![CDATA[一叶]]></name>
@@ -6354,6 +6354,9 @@
     <content type="html"><![CDATA[<h2>无间落叶 无有入无间 ~</h2>
 
 <p><img src="http://blog.leafsoar.com/images/2013/leafsoar.jpg" title="物本清华 心若琉璃 亦如止水 亦如明镜 此时只道是寻常 ~" alt="leafsoar" /></p>
+
+<!-- more -->
+
 
 <p><EMBED id=leafsoar src="http://dl.dropboxusercontent.com/u/54723974/leafsoar.mp3" width=327 height=50 type=audio/mpeg autostart="true" loop="true"></EMBED></p>
 ]]></content>

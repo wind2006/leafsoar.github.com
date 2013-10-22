@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://leafsoar.github.io/sitemap.xml 
+Sitemap: http://blog.leafsoar.com/sitemap.xml 

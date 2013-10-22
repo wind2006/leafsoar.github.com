@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[无间落叶]]></title>
-  <link href="http://leafsoar.github.io/atom.xml" rel="self"/>
-  <link href="http://leafsoar.github.io/"/>
-  <updated>2013-10-22T14:34:57+08:00</updated>
-  <id>http://leafsoar.github.io/</id>
+  <link href="http://blog.leafsoar.com/atom.xml" rel="self"/>
+  <link href="http://blog.leafsoar.com/"/>
+  <updated>2013-10-22T14:50:29+08:00</updated>
+  <id>http://blog.leafsoar.com/</id>
   <author>
     <name><![CDATA[一叶]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[CCScrollView 实现帮助界面、关卡选择]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/07-27.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/07-27.html"/>
     <updated>2013-07-27T17:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/ccscrollview-level</id>
+    <id>http://blog.leafsoar.com/archives/2013/ccscrollview-level</id>
     <content type="html"><![CDATA[<p>本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。文章大致内容如下：</p>
 
 <ul>
@@ -556,7 +556,7 @@
 <p>注意：为了让问题更有针对性，在本文中所有的位置关系所参考的都是 WinSize，
 这意味着，如果你在不同的屏幕适配方案中可能需要有所改动，对屏幕适配这里有一篇文章可以作为参考《<a href="http://blog.leafsoar.com/archives/2013/05-10-19.html">Cocos2d-x 屏幕适配新解</a>》。</p>
 
-<p><img src="http://leafsoar.github.io/images/2013/2013-07-27-1.jpg" alt="图片" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/2013-07-27-1.jpg" alt="图片" /></p>
 
 <p>它完成了以下几个功能（<a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/MacCpp/Classes/LevelView.cpp">示例源码</a>）：</p>
 
@@ -575,9 +575,9 @@
   
   <entry>
     <title type="html"><![CDATA[深入理解 Cocos2d-x 内存管理]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/06-04.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/06-04.html"/>
     <updated>2013-06-04T10:50:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-mem</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-mem</id>
     <content type="html"><![CDATA[<p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
 
 <p>我觉得 <strong>最好的学习方式是以自己的语言组织，说与别人听 ～</strong> 这样对自己：更容易发现平时容易忽略的问题，对别人：或多或少也有所助益！以学习为目的，而别人的受益算是附带的效果，这样一个出发点 ~</p>
@@ -1242,9 +1242,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 内存管理的一种实现]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-29.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-29.html"/>
     <updated>2013-05-29T10:10:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-property</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-property</id>
     <content type="html"><![CDATA[<p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
 
 <p>而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d-x ，或者说，缺少那么一种 <strong>规范</strong>，如果存在了这么一种 <strong>规范</strong>，而使得 Cocos2d-x 更为简单优雅，那势必是游戏的开发过程，更加从新所欲，把重点放在游戏本身的设计之上。</p>
@@ -1768,9 +1768,9 @@
   
   <entry>
     <title type="html"><![CDATA[多层 UI 触摸事件的轻量级设计]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-25.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-25.html"/>
     <updated>2013-05-25T10:10:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-ui-event</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-ui-event</id>
     <content type="html"><![CDATA[<p><strong>轻量级</strong>:一叶非常喜欢的名词，在重量级和轻量级之间，如果做选择的话，一定会选择轻量级，它的特点首先是设计简单小巧，使用方便，更具有灵活性，扩展方便。重量级则大而丰富，全面，但略显笨重，在程序设计之初大多需要全盘考虑。而轻重之间的概念是相对而言，并没有严格的界限。</p>
 
 <h2>Cocos2d-x 触摸事件机制概论</h2>
@@ -2415,9 +2415,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 内存管理浅说]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-22.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-22.html"/>
     <updated>2013-05-22T23:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-mem-mgr</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-mem-mgr</id>
     <content type="html"><![CDATA[<p>使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其<strong>“机制”</strong>，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用，固为浅说。</p>
 
 <h2>无用对象 与 管理对象</h2>
@@ -3002,9 +3002,9 @@
   
   <entry>
     <title type="html"><![CDATA[类 Android 多级日志系统应用]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-15.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-15.html"/>
     <updated>2013-05-15T17:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-log</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-log</id>
     <content type="html"><![CDATA[<p>在 cocos2d-x 中实现类 Android 多级日志系统！写程序，免不了调试打印 Log ，而一个方便的日志系统，可以提高不少开发的效率，写过 Android 应用的朋友应该了解在 Android 中的日志包含很多等级，查看日志的时候可以指定日志的级别，从而过滤一些无用的信息，能够更为快速的定位问题的所在。而在 cocos2d-x 的开发中，统一使用 <strong>CCLog</strong>，只能算是最基本的功能，既然有好的思想可以借鉴，何乐而不为呢～</p>
 
 <p>先看看最终实现的效果，我们使用简单封装过的方法调用打印日志系统（Leafsoar Log:LSLog）：</p>
@@ -3042,7 +3042,7 @@
 
 
 <p>在 Android 的 Logcat 下显示效果：
-<img src="http://leafsoar.github.io/images/2013/cocos2d-x-log.png" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/cocos2d-x-log.png" alt="图片" /></p>
 
 <p>在 Android 平台，可以打印所有信息，并且通过 LogCat 过滤信息，还有相应的高亮显示。而这些都已经在 <strong>LSLog</strong> 内部通过 Jni 调用实现，如需如上所示的调用即可。</p>
 
@@ -3413,9 +3413,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 屏幕适配新解 - 兼容与扩展]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-13.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-13.html"/>
     <updated>2013-05-13T08:02:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-screen-solutions-extension</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-screen-solutions-extension</id>
     <content type="html"><![CDATA[<p>在读这篇文章之前，先读前一篇文章 <a href="http://blog.leafsoar.com/archives/2013/05-10-19.html">Cocos2d-x 屏幕适配新解</a> 是必要的。</p>
 
 <p>如果说前一篇文章文章在 LsSize 提出之前的是基础，LsSize 是应用，那么对于这篇文章来说，LsSize 是基础，而这里是其的综合应用，我之初衷是其扩展性和兼容性，激发读者思维。也许你并没有体会出 LsSize 的强大，而实际上，<strong>它能做的比你想象的要多的多，这是前话 ~</strong></p>
@@ -3540,16 +3540,16 @@
 <p>下面通过几张效果图展示 <strong>固定高度</strong> 和 <strong>固定宽度</strong> 效果：</p>
 
 <p>显示效果：（NoBorder <strong>固定高度</strong>模式 ;FrameSize = 520x320; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-extension-1.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-extension-1.jpg" alt="图片" /></p>
 
 <p>显示效果：（NoBorder <strong>固定高度</strong>模式 ;FrameSize = 520x360; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-extension-2.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-extension-2.jpg" alt="图片" /></p>
 
 <p>显示效果：（NoBorder <strong>固定宽度</strong>模式 ;FrameSize = 480x360; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-extension-3.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-extension-3.jpg" alt="图片" /></p>
 
 <p>显示效果：（NoBorder <strong>固定宽度</strong>模式 ;FrameSize = 480x300; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-extension-4.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-extension-4.jpg" alt="图片" /></p>
 
 <p>如图所示，我们固定了一个方向，使得这个方向上的设计长度正好填充屏幕，而另一个方向上会有所延伸或截取，而此时如果想或者屏幕拐点，可以配合 Visible 的显示区域算得。而这也正式 cocos2d-x 2.1.3 所实现的功能，而如果你此时为了稳定而使用 2.0.4 stable 版本，那么就<strong>可以通过这种基于 LsSize 的设计方法实现 FixedHeight 与 FixedWidth。</strong> 而在将来后续版本稳定，也可以很平滑的升级到使用自带的方式替换，其显示效果一样，只是后续版本 cocos2d-x 在内部将它封装了而已。</p>
 
@@ -3561,9 +3561,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 屏幕适配新解]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-10.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-10.html"/>
     <updated>2013-05-10T19:02:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-screen-solutions</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-screen-solutions</id>
     <content type="html"><![CDATA[<p>为了适应移动终端的各种分辨率大小，各种屏幕宽高比，在 cocos2d-x（当前稳定版：<strong>2.0.4</strong>） 中，提供了相应的解决方案，以方便我们在设计游戏时，能够更好的适应不同的环境。</p>
 
 <p>而在设计游戏之初，决定着我们屏幕适配的因素有哪些，简而言之只有两点：<strong>屏幕大小 和 宽高比</strong>。这两个因素是如何影响游戏的：</p>
@@ -3735,12 +3735,12 @@
 
 <p>此模式可以解决两个问题，其一：游戏画面全屏；其二：保持设置游戏时的宽高比例，相比 kResolutionShowAll 有所区别的是，<strong>为了填补留下的黑边，将画面稍微放大，以至于能够正好补齐黑边</strong>，而这样做的后果可想而知，补齐黑边的同时，另一个方向上将会有一部分画面露出屏幕之外，如下示意图：</p>
 
-<p><img src="http://leafsoar.github.io/images/2013/screen-resolution-1.jpg" alt="图片" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/screen-resolution-1.jpg" alt="图片" /></p>
 
 <p>黑色边框标示实际的屏幕分辨率，紫色区域标示游戏设计大小，而通过放大缩小，保持宽高比固定，
 可以看到 <strong>Show All</strong> 之中的黑色阴影部分为留边，而 <strong>No Border</strong> 的紫色阴影部分则不能显示，而这紫色区域的大小是游戏设计之时是不可控的。那么原设计的画面大小就失去了 <strong>一定的</strong> 参考价值了，因为这可能让你的画面显示残缺。这时仅仅通过 WinSize 满足不了我们的设计需求，所以引入了 <strong>VisibleSize</strong> 与 <strong>VisibleOrigin</strong> 概念。</p>
 
-<p><img src="http://leafsoar.github.io/images/2013/screen-resolution-2.png" alt="图片" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/screen-resolution-2.png" alt="图片" /></p>
 
 <p>如上所示，紫色区域是被屏幕截去的部分，不可显示的，根据实际情况，可能出现横向截取和竖向截取，这取决于实际分辨率的宽高比。而 A、B、C、D所标示的是设计分辨率，固定大小。如果我们想让一个精灵元素显示在屏幕上方靠边，那么如果使用 WinSize 的高度设置其位置，可能出现的情况就是显示到屏幕之外了。FrameSize 和 WinSize 我们已经知道其概念，而 VisibleSize 和 VisibleOrigin 所代表的是什么呢，又时如何为我们解决靠边的问题！注意上图下方的定义， <strong>VisibleSize = H I J K 是用紫色标注的。</strong> 而在上图是 <strong>黑色</strong> 标注，标示屏幕实际分辨率，虽然 FrameSize 和 VisibleSize 都是 H I J K，但其意义不同，紫色表明它是与设计分辨率相关的。</p>
 
@@ -3803,7 +3803,7 @@
 
 <p>ShowAll 和 NoBorder 各有所长，各有所短，而这里提出的新适配解决方案正是取两者之长，舍两者之短的 <strong>组合模式</strong>。简单说来就是用 NoBorder 去实现 ShowAll 的思想。NoBorder 可以保证全屏利用，ShowAll 可以更好的使用实际设计坐标固定位置，而且相对位置不会随宽高比的改变而改变，这在编写游戏的时候能方便不少。先上一个示意图，一目了然 （两个图，两个方向）：</p>
 
-<p><img src="http://leafsoar.github.io/images/2013/screen-resolution-3.png" alt="图片" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/screen-resolution-3.png" alt="图片" /></p>
 
 <p>在原来 NoBorder 模式示意图上添加了新的概念，<strong>LsSize = X Y M N</strong> (leafsoar 简写了，为了不跟 cocos2d-x 的一些概念混淆，什么名字不重要，只要了解其含义即可)，在 NoBorder 模式下的 LsSize 相对于 FrameSize 而言，正如 在 <strong>ShowAll</strong> 模式下的 WinSize 相对于 FrameSize，所以说这是 ShowAll NoBorder 的组合概念，<strong>而这里的 LsSize 与 WinSize 的宽高比是一致的。</strong></p>
 
@@ -3883,13 +3883,13 @@
 <p></p>
 
 <p>显示效果：(FrameSize = 640x540)
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-4.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-4.jpg" alt="图片" /></p>
 
 <p>显示效果：(ShowAll; FrameSize = 520x320; WinSize = 480x320)
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-5.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-5.jpg" alt="图片" /></p>
 
 <p>显示效果：(NoBorder; FrameSize = 520x320; WinSize = 480x320)
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-6.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-6.jpg" alt="图片" /></p>
 
 <p>通过效果我们可以看到，在相同 FrameSize 下 NoBorder 时，画面由于填充了黑边，将画面放大，以至于上下有部分显示不全，通过拐角四个精灵可以看出。</p>
 
@@ -3908,7 +3908,7 @@
 
 <p>为了弥补画面因需要不填空白出现的方法，我们将画面缩小，放大系数可以通过 <strong>CCEGLView::sharedOpenGLView()&ndash;>getScaleY() </strong> 取得。其实 setContentScaleFactor 方法是为了适配不同资源而设计的，可以用此方法对不同资源适配，缩放等。效果如下：</p>
 
-<p><img src="http://leafsoar.github.io/images/2013/screen-resolution-7.jpg" alt="图片" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/screen-resolution-7.jpg" alt="图片" /></p>
 
 <p>我们看到 480x320 的图片显示完全正确了，也正是我们想要的效果，但唯一的缺点是 ~~ 拐角处四个精灵的位置依然不是我们想要的，我们设计的位置是以 480x320 设置位置的，而 WinSize 也是 480x320 ，而此时基于 480x320 的设计必然会显示到屏幕之外，而要想不修改精灵位置，而让其显示正确的位置，那么为了保证 LsSize 的固定，我们需要一个方法，那就是 <strong>动态设置 WinSize</strong>。</p>
 
@@ -3968,12 +3968,12 @@
 <p></p>
 
 <p>显示效果：（NoBorder 模式 ;FrameSize = 520x320; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-8.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-8.jpg" alt="图片" /></p>
 
 <p>我们看到在没有修改源代码，并且在设计中使用 480x320 的参考系，也既是基于  LsSize 的设计显示效果如我们预期，那么我们换一个 FrameSize 来看看是否能够自动适应呢？如下：</p>
 
 <p>显示效果：（NoBorder 模式 ;FrameSize = 600x480; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-9.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-9.jpg" alt="图片" /></p>
 
 <p>到此，基于 LsSize 参考系的游戏设计已经完成了，这样做的好处是很明显的，集 ShowAll 和 NoBorder 的优点于一处，这里的图片元素是为了好定位，实现的需要而写的，具体场景可以使用背景地图，或一张大的图片显示，而没有任何影响，也可以继续使用 VisibleSize 得到 LsSize 之外的部分区域大小，在 LsSize 之外可以使用背景图片作为装饰，即保证了游戏的全屏，又保证了游戏设计时的方便，如果使用完全基于 LsSize  的设计实现，除了显示背景装饰之外，我们不想让 LsSize 的内部元素显示到 LsSize 之外如何做呢？我们只需要设定 LsSize 层的的显示区域即可，我们可以修改场景的实现：</p>
 
@@ -4045,7 +4045,7 @@
 <p></p>
 
 <p>显示效果：（NoBorder 模式 ;FrameSize = 520x320; LsSize = 480x320; WinSize = 动态获取）
-<img src="http://leafsoar.github.io/images/2013/screen-resolution-10.jpg" alt="图片" /></p>
+<img src="http://blog.leafsoar.com/images/2013/screen-resolution-10.jpg" alt="图片" /></p>
 
 <h2>屏幕适配新解</h2>
 
@@ -4057,9 +4057,9 @@
   
   <entry>
     <title type="html"><![CDATA[实现 Cocos2d-x 全局定时器]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-08.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-08.html"/>
     <updated>2013-05-08T21:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-global-schedule</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-global-schedule</id>
     <content type="html"><![CDATA[<p>cocos2d-x 中有自己的定时器实现，一般用法是在场景，层等内部实现，定时器的生命周期随着它们的消亡而消亡，就运行周期而言，相对最长的是场景，如果在多个场景切换并且保持定时器的运行，那我们就需要定义一个自己的  <strong>全局定时器</strong>。</p>
 
 <p>平时所使用的定时器，我们可以直接使用，是因为 <strong>CCNode</strong> 帮我们实现了定时器的封装，一个简单的做法，是定义个全局的静态 CCNode 对象，在程序运行之初初始化，并执行其定时器任务，而不由任何场景所管理即可实现，但在这里，一叶对定时器的内部实现稍作了解后，封装了自己实现的全局定时解决方案，代码如下(<a href="https://github.com/leafsoar/ls-cocos2d-x/tree/master/Learn/Classes/GlobalSchedule">获取源码</a> )：</p>
@@ -4314,9 +4314,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 程序是如何开始运行与结束的]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-05.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-05.html"/>
     <updated>2013-05-05T23:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-end</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-end</id>
     <content type="html"><![CDATA[<p><strong>题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力</strong></p>
 
 <h2>问题的由来</h2>
@@ -5123,9 +5123,9 @@
   
   <entry>
     <title type="html"><![CDATA[Eclipse Cocos2d-x 开发自动管理]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/04-24.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/04-24.html"/>
     <updated>2013-04-24T12:15:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/linux-eclipse-advanced</id>
+    <id>http://blog.leafsoar.com/archives/2013/linux-eclipse-advanced</id>
     <content type="html"><![CDATA[<h2>Makefile Android.mk 引发的思索</h2>
 
 <p>在我们编写 Android 平台 cocos2d-x 游戏的时候，我们除了编写 <code>Classes</code> 之内的源代码文件之外，我们还需要维护其编译文件 Android.mk，如我们在 Classes 添加新的源文件，那么我们就要在 Android.mk 配置添加其编译路径，如：</p>
@@ -5489,10 +5489,10 @@
   
   <entry>
     <title type="html"><![CDATA[Eclipse 组织跨平台开发 Cocos2d-x 游戏]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/04-23.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/04-23.html"/>
     <updated>2013-04-23T16:15:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/linux-eclipse-cocos2dx</id>
-    <content type="html"><![CDATA[<p>前面我们完成了，在 <a href="http://leafsoar.github.io/archives/2013/04-17-17.html">Linux 上运行 cocos2d-x</a> 游戏，然后使用 <a href="http://leafsoar.github.io/archives/2013/04-19-11.html">Eclipse 开发 Linux 平台 cocos2d-x</a> 游戏，最后完成了在 Linux 下使用 <a href="http://leafsoar.github.io/archives/2013/04-22-22.html">Eclipse 开发 Android 平台的 cocos2d-x</a> 游戏。</p>
+    <id>http://blog.leafsoar.com/archives/2013/linux-eclipse-cocos2dx</id>
+    <content type="html"><![CDATA[<p>前面我们完成了，在 <a href="http://blog.leafsoar.com/archives/2013/04-17-17.html">Linux 上运行 cocos2d-x</a> 游戏，然后使用 <a href="http://blog.leafsoar.com/archives/2013/04-19-11.html">Eclipse 开发 Linux 平台 cocos2d-x</a> 游戏，最后完成了在 Linux 下使用 <a href="http://blog.leafsoar.com/archives/2013/04-22-22.html">Eclipse 开发 Android 平台的 cocos2d-x</a> 游戏。</p>
 
 <p>Ecilpse 开发 Linux 平台游戏使用的是 <code>proj.linux</code> 项目，Android 平台的使用的是 <code>proj.android</code> 项目，现在我们将所有项目整合，提供一个 Eclipse 完全开发 cocos2d-x 跨平台游戏的解决方案。我们将以上篇博文所建立的 Android 平台项目 <code>HelloWorld</code> 为基础，整合进 Linux 平台项目，并使用其作为开发调试的主要项目。</p>
 
@@ -5591,9 +5591,9 @@
 <h2>Eclipse 组织实现步骤</h2>
 
 <ul>
-<li>在<a href="http://leafsoar.github.io/archives/2013/04-22-22.html">上篇博文</a>，我们已经通过 Eclipse 添加了一个名为 HelloWorld 的 Android 平台项目。基于此，我们首先修改这个项目的名称 <code>HelloWorld</code> 改为 <code>HelloWorld_j</code>，只要右击项目 <strong>Rename</strong> 即可。</li>
+<li>在<a href="http://blog.leafsoar.com/archives/2013/04-22-22.html">上篇博文</a>，我们已经通过 Eclipse 添加了一个名为 HelloWorld 的 Android 平台项目。基于此，我们首先修改这个项目的名称 <code>HelloWorld</code> 改为 <code>HelloWorld_j</code>，只要右击项目 <strong>Rename</strong> 即可。</li>
 <li>然后我们 Eclipse 新建项目 <code>New -&gt; Other -&gt; General -&gt; Project -&gt; Next</code> ,输入项目名称 <code>HelloWorld</code> 后 <code>Finish</code>。注意这里的项目类型是 <strong>General</strong>，并不是 Android 或是其它项目，因为我们只需要用此管理目录即可，由于工作空间中已经存在 HelloWorld 目录，会自动以此目录创建 HelloWorld 项目，创建完成便能够在  Eclipse HelloWorld 项目中看到三个文件夹。Classes、proj.android 和 Resources。</li>
-<li>最后我们需要一个 proj.linux 项目，cocos2d-x 本身并没有明确的创建方式，不像 VS 和 Xcode  都有项目模板可以和 IDE 自动集成，不过我们可以 copy cocos2dx 自带的例子 <a href="http://leafsoar.github.io/archives/2013/04-19-11.html">HelloCpp</a> 中的 proj.linux 拿过来一用。将其目录的 proj.linux 复制到 HelloWorld 目录之下。</li>
+<li>最后我们需要一个 proj.linux 项目，cocos2d-x 本身并没有明确的创建方式，不像 VS 和 Xcode  都有项目模板可以和 IDE 自动集成，不过我们可以 copy cocos2dx 自带的例子 <a href="http://blog.leafsoar.com/archives/2013/04-19-11.html">HelloCpp</a> 中的 proj.linux 拿过来一用。将其目录的 proj.linux 复制到 HelloWorld 目录之下。</li>
 <li>复制了 proj.linux 目录，我们用 Eclipse 导入此项目。导入过以后修改项目名 HelloCpp 为 HelloWorld_dx。</li>
 </ul>
 
@@ -5602,7 +5602,7 @@
 
 <ul>
 <li>我们先要做到能通过 make 命令编译此项目，然后在配置使用 Eclipse 可以开发，并提供自动补全功能，CDT 的功能还是很强大很好用的。</li>
-<li>参照 <a href="http://leafsoar.github.io/archives/2013/04-19-11.html">此篇博文</a> 修改 makefile 已使 make 能进行项目的编译运行。</li>
+<li>参照 <a href="http://blog.leafsoar.com/archives/2013/04-19-11.html">此篇博文</a> 修改 makefile 已使 make 能进行项目的编译运行。</li>
 </ul>
 
 
@@ -5676,9 +5676,9 @@
   
   <entry>
     <title type="html"><![CDATA[Linux 下开发 Android Cocos2d-x 游戏]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/04-22.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/04-22.html"/>
     <updated>2013-04-22T22:15:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/linux-cocos2dx-develop-android</id>
+    <id>http://blog.leafsoar.com/archives/2013/linux-cocos2dx-develop-android</id>
     <content type="html"><![CDATA[<p>开发 Android 应用的首选 IDE 是什么，是 Eclipse ，而开发 Android 平台的 cocos2d-x 游戏呢，当然也是 Eclipse 。</p>
 
 <h2>Eclipse Android 开发环境搭建</h2>
@@ -5819,7 +5819,7 @@
 
 <p></p>
 
-<p><a href="http://leafsoar.github.io/archives/2013/04-19-11.html">上篇博文</a>我们简单分析了一下这样的目录组织方式，和其共用。创建好 cocos2d-x android 项目，我们开始编译，<code>proj.android</code>目录下提供一个自动编辑脚本，完成的工作是，编译 cocos2d-x C/C++ 程序，并且在 libs 目录生成相应的 <strong>so</strong> 库文件。</p>
+<p><a href="http://blog.leafsoar.com/archives/2013/04-19-11.html">上篇博文</a>我们简单分析了一下这样的目录组织方式，和其共用。创建好 cocos2d-x android 项目，我们开始编译，<code>proj.android</code>目录下提供一个自动编辑脚本，完成的工作是，编译 cocos2d-x C/C++ 程序，并且在 libs 目录生成相应的 <strong>so</strong> 库文件。</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -5880,10 +5880,10 @@
   
   <entry>
     <title type="html"><![CDATA[善其事先利其器 Eclipse 开发 Cocos2d-x]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/04-19.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/04-19.html"/>
     <updated>2013-04-19T11:20:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/linux-cocos2dx-develop</id>
-    <content type="html"><![CDATA[<p><a href="http://leafsoar.github.io/archives/2013/04-17-17.html">上篇博客</a>，我们实现了在 Linux 下运行 cocos2d-x 游戏，这意味着我们可以在 Linux PC 机上进行游戏的编写、运行和调试，提高开发效率，而在手机上运行的过程大致分为：</p>
+    <id>http://blog.leafsoar.com/archives/2013/linux-cocos2dx-develop</id>
+    <content type="html"><![CDATA[<p><a href="http://blog.leafsoar.com/archives/2013/04-17-17.html">上篇博客</a>，我们实现了在 Linux 下运行 cocos2d-x 游戏，这意味着我们可以在 Linux PC 机上进行游戏的编写、运行和调试，提高开发效率，而在手机上运行的过程大致分为：</p>
 
 <ul>
 <li>PC 上编写游戏源代码</li>
@@ -5978,7 +5978,7 @@
 </ul>
 
 
-<p>此时我们在 <strong>Build Project</strong> 项目，就已经在 <code>bin</code> 目录生成可执行文件了。我们在项目右击 <code>Run as</code> &ndash;> <code>Local C/C++ Application</code> 但却运行不了，与 <a href="http://leafsoar.github.io/archives/2013/04-17-17.html">上篇博客</a> 相比，虽然生成的方式略有不同，但本质一样，都是通过 <strong>Makefile</strong> 生成，由于配置原因，必须要在 <strong>当前目录之下才能运行</strong> 。这是因为 Makefile 之中默认配置的库路径问题所致。</p>
+<p>此时我们在 <strong>Build Project</strong> 项目，就已经在 <code>bin</code> 目录生成可执行文件了。我们在项目右击 <code>Run as</code> &ndash;> <code>Local C/C++ Application</code> 但却运行不了，与 <a href="http://blog.leafsoar.com/archives/2013/04-17-17.html">上篇博客</a> 相比，虽然生成的方式略有不同，但本质一样，都是通过 <strong>Makefile</strong> 生成，由于配置原因，必须要在 <strong>当前目录之下才能运行</strong> 。这是因为 Makefile 之中默认配置的库路径问题所致。</p>
 
 <p>Makefile 使用的是 <strong>相对路径</strong> 引用库文件的，这也就是因为只有在 当前目录运行有效(工作目录在当前目录)，而在 Eclipse 之中运行无效的原因，Eclipse 的运行 <strong>工作目录</strong> 不是可执行程序的目录！！！</p>
 
@@ -6208,9 +6208,9 @@
   
   <entry>
     <title type="html"><![CDATA[Linux 环境 Cocos2d-x开发]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/04-17.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/04-17.html"/>
     <updated>2013-04-17T17:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/linux-cocos2dx-run</id>
+    <id>http://blog.leafsoar.com/archives/2013/linux-cocos2dx-run</id>
     <content type="html"><![CDATA[<h2>Cocos2d-x 跨平台特性分析</h2>
 
 <p>作为一款跨平台的 2D 游戏引擎 <a href="http://cocos2d-x.org/">Cocos2d-x</a> ，方便发布到各种移动平台，支持也在不断完善。可以跨平台运行，更据优势的是可以跨平台开发！</p>
@@ -6323,7 +6323,7 @@
 
 <hr />
 
-<p><img src="http://leafsoar.github.io/images/2013/cocos2d-x-helloworld.jpg" alt="Hello World" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/cocos2d-x-helloworld.jpg" alt="Hello World" /></p>
 
 <p>至此 cocos2d-x 自带的 <strong>HelloCpp</strong> 就已经能在 Linux 平台下运行了！</p>
 
@@ -6348,12 +6348,12 @@
   
   <entry>
     <title type="html"><![CDATA[初见]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/04-16.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/04-16.html"/>
     <updated>2013-04-16T17:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/first</id>
+    <id>http://blog.leafsoar.com/archives/2013/first</id>
     <content type="html"><![CDATA[<h2>无间落叶 无有入无间 ~</h2>
 
-<p><img src="http://leafsoar.github.io/images/2013/leafsoar.jpg" title="物本清华 心若琉璃 亦如止水 亦如明镜 此时只道是寻常 ~" alt="leafsoar" /></p>
+<p><img src="http://blog.leafsoar.com/images/2013/leafsoar.jpg" title="物本清华 心若琉璃 亦如止水 亦如明镜 此时只道是寻常 ~" alt="leafsoar" /></p>
 
 <p><EMBED id=leafsoar src="http://dl.dropboxusercontent.com/u/54723974/leafsoar.mp3" width=327 height=50 type=audio/mpeg autostart="true" loop="true"></EMBED></p>
 ]]></content>

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Cocos2d-x | 无间落叶]]></title>
-  <link href="http://leafsoar.github.io/archives/category/cocos2d-x/atom.xml" rel="self"/>
-  <link href="http://leafsoar.github.io/"/>
-  <updated>2013-10-22T14:34:57+08:00</updated>
-  <id>http://leafsoar.github.io/</id>
+  <link href="http://blog.leafsoar.com/archives/category/cocos2d-x/atom.xml" rel="self"/>
+  <link href="http://blog.leafsoar.com/"/>
+  <updated>2013-10-22T14:50:29+08:00</updated>
+  <id>http://blog.leafsoar.com/</id>
   <author>
     <name><![CDATA[一叶]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[CCScrollView 实现帮助界面、关卡选择]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/07-27.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/07-27.html"/>
     <updated>2013-07-27T17:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/ccscrollview-level</id>
+    <id>http://blog.leafsoar.com/archives/2013/ccscrollview-level</id>
     <content type="html"><![CDATA[<p>本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。文章大致内容如下：</p>
 
 <ul>
@@ -373,9 +373,9 @@ void LevelView::ccTouchEnded(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent)
   
   <entry>
     <title type="html"><![CDATA[深入理解 Cocos2d-x 内存管理]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/06-04.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/06-04.html"/>
     <updated>2013-06-04T10:50:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-mem</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-mem</id>
     <content type="html"><![CDATA[<p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
 
 <p>我觉得 <strong>最好的学习方式是以自己的语言组织，说与别人听 ～</strong> 这样对自己：更容易发现平时容易忽略的问题，对别人：或多或少也有所助益！以学习为目的，而别人的受益算是附带的效果，这样一个出发点 ~</p>
@@ -775,9 +775,9 @@ lu-&gt;setSprite(CCSprite::create("a.png"));
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 内存管理的一种实现]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-29.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-29.html"/>
     <updated>2013-05-29T10:10:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-property</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-property</id>
     <content type="html"><![CDATA[<p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
 
 <p>而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d-x ，或者说，缺少那么一种 <strong>规范</strong>，如果存在了这么一种 <strong>规范</strong>，而使得 Cocos2d-x 更为简单优雅，那势必是游戏的开发过程，更加从新所欲，把重点放在游戏本身的设计之上。</p>
@@ -1087,9 +1087,9 @@ CC_SAFE_RELEASE_NULL(__m_pLUser);
   
   <entry>
     <title type="html"><![CDATA[多层 UI 触摸事件的轻量级设计]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-25.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-25.html"/>
     <updated>2013-05-25T10:10:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-ui-event</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-ui-event</id>
     <content type="html"><![CDATA[<p><strong>轻量级</strong>:一叶非常喜欢的名词，在重量级和轻量级之间，如果做选择的话，一定会选择轻量级，它的特点首先是设计简单小巧，使用方便，更具有灵活性，扩展方便。重量级则大而丰富，全面，但略显笨重，在程序设计之初大多需要全盘考虑。而轻重之间的概念是相对而言，并没有严格的界限。</p>
 
 <h2>Cocos2d-x 触摸事件机制概论</h2>
@@ -1447,9 +1447,9 @@ LsTouch* LsTouchEvent::getPriorityTouch(LsTouch* a, LsTouch* b) {
   
   <entry>
     <title type="html"><![CDATA[Cocos2d-x 内存管理浅说]]></title>
-    <link href="http://leafsoar.github.io/archives/2013/05-22.html"/>
+    <link href="http://blog.leafsoar.com/archives/2013/05-22.html"/>
     <updated>2013-05-22T23:30:00+08:00</updated>
-    <id>http://leafsoar.github.io/archives/2013/cocos2dx-mem-mgr</id>
+    <id>http://blog.leafsoar.com/archives/2013/cocos2dx-mem-mgr</id>
     <content type="html"><![CDATA[<p>使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其<strong>“机制”</strong>，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用，固为浅说。</p>
 
 <h2>无用对象 与 管理对象</h2>

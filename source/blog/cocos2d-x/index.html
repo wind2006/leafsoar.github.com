@@ -1,0 +1,14 @@
+---
+layout: page
+title: 
+footer: false
+---
+<h2>这里是我的 Cocos2d-x 学习记录 ～</h2>
+
+<div id="blog-cocos2d-x">
+{% for post in site.posts limit: 10 %}
+<article>
+{% include archive_post.html %}
+</article>
+{% endfor %}
+</div>

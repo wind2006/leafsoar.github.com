@@ -1,0 +1,1794 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Cocos2d-x | 无间落叶]]></title>
+  <link href="http://leafsoar.github.io/archives/category/cocos2d-x/atom.xml" rel="self"/>
+  <link href="http://leafsoar.github.io/"/>
+  <updated>2013-10-22T14:34:57+08:00</updated>
+  <id>http://leafsoar.github.io/</id>
+  <author>
+    <name><![CDATA[一叶]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[CCScrollView 实现帮助界面、关卡选择]]></title>
+    <link href="http://leafsoar.github.io/archives/2013/07-27.html"/>
+    <updated>2013-07-27T17:30:00+08:00</updated>
+    <id>http://leafsoar.github.io/archives/2013/ccscrollview-level</id>
+    <content type="html"><![CDATA[<p>本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。文章大致内容如下：</p>
+
+<ul>
+<li>首先实现了一个可拖动的界面，滚屏屏幕，它可以用于完成帮助界面的设计</li>
+<li>接着实现了关卡选择功能，这里的着重点是 <strong>如何处理触摸机制</strong> 。以达到不错的协同工作</li>
+<li>由于是分屏滚动，所以完成了一个页索引 “指示球功能”</li>
+</ul>
+
+
+<p>本文所使用的 Cocos2d-x 为当前的稳定版本 2.1.4。（如无说明，文章内容总是配合 当前最新 稳定版库）
+原来是使用 Cocos2d-x 2.0.4 编写的功能，周末花了点事件进行了整理 和 重构（触摸机制的重构）。</p>
+
+<!-- more -->
+
+
+<hr />
+
+<h2>可拖动界面的实现 （帮助界面）</h2>
+
+<p>实现帮助界面，那么我们首先要考虑的是，我们需要一个什么样的效果？大致总结如下：</p>
+
+<ul>
+<li>一个可分屏显示的界面是必须的</li>
+<li>界面可以拖动操作，多屏滚动</li>
+<li>还想添加一个滚动屏幕的校队，以使显示区域正好是屏幕宽度的倍数</li>
+</ul>
+
+
+<p>现在我们将要使用 CCScrollView 来实现这么样一个功能，那么它需要哪些 <strong>元素</strong> 以及需要解决哪些设计上的问题，整理一下思路先：</p>
+
+<ul>
+<li>首先需要一个 CCScrollView 层，和一个包含内容的容器层（CCLayer）</li>
+<li>处理触摸操作，我们直接启用 CCScrollView 的可触摸操作，就已经能够完成对 CCScrollView 的拖动，这是它本身所提供的功能</li>
+<li>CCScrollView 本身所提供的触摸操作，默认情况有诸多不便，虽然能够拖动，但区域控制器来确很繁琐，更何况我们还需要校队，对齐等操作</li>
+<li>所以我们将 触摸 的操作交由 CCScrollView 所在的层（或者当前运行的场景），禁用 CCScrollView 的触摸，我们通过处理当前界面的触摸，用以控制 CCScrollView 的行为，是一个可行的解决方案</li>
+</ul>
+
+
+<p>下面给出相应的关键代码，实现以上功能（本文的示例都在此处 <a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/MacCpp/Classes/LevelView.cpp">源码查看</a>）：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 创建一个 CCScrollView, 内容大小和当前的界面一样
+CCScrollView* scrollView = CCScrollView::create(this-&gt;getContentSize());
+// 设定容器层，我们并不需要重新设置 scrollview 的 ContentSize，容器层内部设定即可
+scrollView-&gt;setContainer(getContainLayer());
+// 关闭 scrollView 的可触摸操作
+scrollView-&gt;setTouchEnabled(false);
+
+// 容器层内容实现
+CCLayer* LevelView::getContainLayer(){
+    m_nPageCount = 4;
+
+    CCSize winSize = CCDirector::sharedDirector()-&gt;getWinSize();
+    CCPoint pointCenter = ccp(winSize.width / 2, winSize.height / 2);
+
+    CCLayer* layer = CCLayer::create();
+    layer-&gt;setPosition(CCPointZero);
+
+    // 添加 frame，每 一页 用一张背景图显示
+    for (int i = 0; i &lt; m_nPageCount; i++) {
+        CCSprite* frame = CCSprite::create("level/frame.png");
+        frame-&gt;setPosition(ccpAdd(pointCenter, ccp(winSize.width * i, 0)));
+        layer-&gt;addChild(frame);
+    }
+
+    layer-&gt;setContentSize(CCSizeMake(winSize.width * m_nPageCount, winSize.height));
+
+    return layer;
+}
+</code></pre>
+
+<p>```</p>
+
+<p>完成以上内容，那么基本准备工作就做好了。上面我们要注意区分两个概念，ViewSize 和 ContentSize，ViewSize 是 scrollView 所显示区域的大小，ContentSize 是滚动层的区域大小，一般而言，ViewSize 就是 ContentSize 上可见的一部分区域，通过拖动可以显示不同的部分。</p>
+
+<p>后面继续，触摸处理相关代码：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 关闭 scrollview 的触摸，相应的，我们要启用当前的触摸，并注册为单点触摸类型
+void LevelView::registerWithTouchDispatcher(){
+    CCDirector::sharedDirector()-&gt;getTouchDispatcher()-&gt;addTargetedDelegate(this, 0, true);
+}
+
+bool LevelView::ccTouchBegan(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent){
+    // 记录触摸起始点的位置
+    m_touchPoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());
+    // 记录触摸起始点的偏移
+    m_touchOffset = getScrollView()-&gt;getContentOffset();
+    return true;
+}
+
+void LevelView::ccTouchMoved(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent){
+    CCPoint movePoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());
+    // 获得当前的拖动距离
+    float distance = movePoint.x - m_touchPoint.x;
+
+    // 设定当前偏移位置
+    CCPoint adjustPoint = ccp(m_touchOffset.x + distance, 0);
+    // 让 scrollView 跟着 move 操作而移动
+    getScrollView()-&gt;setContentOffset(adjustPoint, false);
+}
+
+void LevelView::ccTouchEnded(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent){
+    CCPoint endPoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());
+    float distance = endPoint.x - m_touchPoint.x;
+
+    if (fabs(distance) &lt; 3){
+        // 小于三，不做拖动操作，也排除了（抖动误操作）
+    }else if (fabs(distance) &gt; 50){
+        // 大于 50，执行拖动效果
+        adjustScrollView(distance);
+    }else{
+        // 回退为拖动之前的位置
+        adjustScrollView(0);
+    }
+}
+
+void LevelView::ccTouchCancelled(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent){
+    // 参数为 0 表示 恢复之前的屏幕位置
+    adjustScrollView(0);
+}
+
+void LevelView::adjustScrollView(float offset){
+    CCSize winSize = CCDirector::sharedDirector()-&gt;getWinSize();
+    // 我们根据 offset 的实际情况来判断移动效果
+    if (offset &lt; 0)     // 表示右移
+        m_nCurPage ++;
+    else if (offset &gt; 0)
+        m_nCurPage --;
+
+    // 屏幕 页数 检测
+    if (m_nCurPage &lt; 0)
+        m_nCurPage = 0;
+    else if (m_nCurPage &gt; m_nPageCount - 1)
+        m_nCurPage = m_nPageCount - 1;
+
+    // 根据当前的 页数 获得偏移量，并设定新的位置，且启用动画效果
+    CCPoint adjustPoint = ccp(-winSize.width * m_nCurPage , 0);
+    getScrollView()-&gt;setContentOffsetInDuration(adjustPoint, 0.2f);
+
+    CCLog("current page index: %d", m_nCurPage);
+}
+</code></pre>
+
+<p>```</p>
+
+<p>由以上的内容，便完成了我们所需要的帮助界面的效果，一个可拖动，滚动的界面，页面数根据自己需要来定，这里只是实现的步骤，当然在这个界面里面要放什么元素，那就要看你的心情了，哈！</p>
+
+<p>要放什么元素？我们基于以上的实现，在里面添加可点击项，以完成一个关卡选择功能！</p>
+
+<hr />
+
+<h2>扩展，实现关卡选择功能</h2>
+
+<p>关卡选择 就界面而言，和上面所说的帮助界面并没有太大区别，所不同的是，除了触摸拖动界面之外，还可以点击内部的元素，如关卡，以实现不同的功能，所以我们基于以上的内容，扩展添加实现关卡选择功能。</p>
+
+<p>实现以下代码，完成在界面添加关卡精灵元素：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 修改层内容实现
+CCLayer* LevelView::getContainLayer(){
+    m_nPageCount = 4;
+    // ..... 此处省略，参照上文
+
+    // 在此处添加关卡精灵
+    for (int i = 0; i &lt; levelCount; i ++) {
+        CCNode* level = getSpriteByLevel(i);
+        // 设置位置
+        int curPageIndex = i / (widthCount * heightCount);
+        float xOffset = i % 4 * 100 + 90;
+        float yOffset = winSize.height - ((i % (widthCount * heightCount)) / widthCount * 120 + 180);
+
+        level-&gt;setPosition(ccp(xOffset + winSize.width * curPageIndex, yOffset));
+        // 这里使用了 zOrder = 2，用此值来构建层次关系，如后文将要添加的显示点击背景效果
+        layer-&gt;addChild(level ,2, i);
+    }
+
+    return layer;
+}
+
+// 这里是上面所用到的方法
+CCNode* LevelView::getSpriteByLevel(int level){
+
+    CCSprite* sprite = CCSprite::create("level/level.png");
+    // 添加关卡标示
+    CCString* str = CCString::createWithFormat("%d", level + 1);
+    CCLabelBMFont* label = CCLabelBMFont::create(str-&gt;getCString(),"level/prim30.fnt");
+    label-&gt;setPosition(ccp(40, 45));
+    sprite-&gt;addChild(label);
+
+    // 这里可以再为 关卡精灵做些装饰，就像 lable 一样，如样式，关卡锁等其它元素
+
+    return sprite;
+}
+</code></pre>
+
+<p>```</p>
+
+<p>写到这里，我们就完成了所有的显示效果，并且可以拖动界面显示不同的页，还有关卡选择的精灵，不过现在还欠缺的就是，关卡点击的操作了！要实现一个可点击操作的功能，我们可以有以下几种常用的方式：</p>
+
+<ul>
+<li>使用 CCMenu 来作为点击项的操作：一般而言，一叶不喜欢使用 CCMenu，因为它的触摸时机不好控制，特别是在当前界面可拖动的情况，还有些冲突，解决起来也挺麻烦，一个显著的影响是，点击 CCMenu 的时候，拖动滚屏就失去了效果，如果你有精力着折腾使用 CCMenu ,那么无妨～</li>
+<li>使用常用精灵，以容器层接受触摸消息，然后依次遍历精灵，条件判断是否产生点击项，这是一个常用的方法，需要设定好一系列集合，遍历，判断等复杂的步骤，特别是类似方块游戏中用的挺多，总乐此不疲～话说一叶之前也是这么实现的！但是实现起来也时相当麻烦的～而且编写的逻辑不能够被重用（其它游戏类似功能）</li>
+<li>建立一套新的机制，来满足特性情况下的需求，也就是封装一套解决方案，以方便对诸如此类的操作，这让一叶想到了之前的文章 《<a href="http://blog.leafsoar.com/archives/2013/05-25-10.html">多层 UI 触摸事件的轻量级设计</a>》（这种设计能够适应大多情况，正好用在此处，看看它的实用性如何！），在写这篇文章的时候，也将此处的操作用这样的机制重构一番。</li>
+</ul>
+
+
+<hr />
+
+<h3><strong>基于 LsTouch 的触摸机制实现</strong></h3>
+
+<p>在阅读以下内容之前，可以先看《<a href="http://blog.leafsoar.com/archives/2013/05-25-10.html">多层 UI 触摸事件的轻量级设计</a>》一文，里面详细介绍了它的实现机制，以及特性，可以简称它为 <strong>LsTouch</strong>，而此文是将这种设计用在可用之处。当然作为封装来说，你并不需要了解它的内部实现，就能够很好的使用它。或者换句话说，作为封装的模块，你只需要知道，如下这样使用它就行，它能帮我们解决触摸操作的问题，如果对内部实现感兴趣，可以去看一看实现。它的步骤如下。</p>
+
+<p> 继承 <strong>LsTouchEvent</strong> 并实现 <strong>touchEventAction</strong> 接口函数，这样做以后将意味着，你可以在这个类中使用 <strong>addLsTouch</strong> 方法添加 “可触摸” 元素，其自动管理，之后可以在任意地方调用 <strong>sendTouchMessage</strong> 方法（它将会传入当前的点击 pTouch 参数），后自动回调 touchEventAction 方法，回调参数将包含了，当前的 “可触摸” 元素的引用，你因此知道，你点击的是哪个元素（如 哪个关卡）。以下用代码来说明其实现（我们将旧代码注释，以体现所改动的地方）：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 继承 LsTouchEvent 并实现接口函数
+void LevelView::touchEventAction(LsTouch *touch, int type){
+    if (touch)
+        CCLog("touch event action id: %d  type: %d", touch-&gt;getEventId(), type);
+}
+
+// 改写上文，返回精灵函数，使之变为可操作项
+CCNode* LevelView::getSpriteByLevel(int level){
+
+    // CCSprite* sprite = CCSprite::create("level/level.png");
+    // // 添加关卡标示
+    // CCString* str = CCString::createWithFormat("%d", level + 1);
+    // CCLabelBMFont* label = CCLabelBMFont::create(str-&gt;getCString(),"level/prim30.fnt");
+    // label-&gt;setPosition(ccp(40, 45));
+    // sprite-&gt;addChild(label);
+    // // 这里可以再为 关卡精灵做些装饰，就像 lable 一样
+
+    // 可以看到改动的地方不多，这样就把需要显示的精灵，包装成了可操作项
+    LsTouch* touch = LsTouch::create();
+    touch-&gt;setDisplay(sprite);
+    // 可触摸项添加到可触摸项集合，关卡 level 作为 eventId 传递
+    this-&gt;addLsTouch(touch, level);
+
+    return touch;
+}
+
+// 在触摸函数里面添加，发送触摸消息，只需要添加一句话
+bool LevelView::ccTouchBegan(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent){
+    // CCLog("touch begin.");
+    // m_touchPoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());
+    // m_touchOffset = getScrollView()-&gt;getContentOffset();
+
+    // 发送触摸消息，并会在 touEventAction 自动相应， 如果触摸到元素
+    sendTouchMessage(pTouch, 0);
+
+    return true;
+}
+
+// 这里也是同样
+void LevelView::ccTouchEnded(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent){
+    // CCPoint endPoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());
+    // float distance = endPoint.x - m_touchPoint.x;
+    // float distanceY = endPoint.y - m_touchPoint.y;
+    //if (fabs(distance) &lt; 3 &amp;&amp; fabs(distanceY) &lt; 3){
+        // 小于三，不做拖动操作，也排除了（抖动误操作）,第二个参数，事件类型 1： touch end， 由 touchEventAction 自动响应
+        sendTouchMessage(pTouch, 1);
+    //
+    //}else if (fabs(distance) &gt; 50){
+    //    // 大于 50，执行拖动效果
+    //    adjustScrollView(distance);
+    //}else{
+    //    // 回退为拖动之前的位置
+    //    adjustScrollView(0);
+    //}
+
+    // 无论如何，触摸结束，类型为 2
+    sendTouchMessage(pTouch, 2);
+}
+</code></pre>
+
+<p>```</p>
+
+<p>上文，我们对 getSpriteByLevel 所返回的精灵做了包装处理，然后在 ccTouch 函数，调用发送触摸消息，然后自动回调 <strong>touchEventAction</strong> 函数，并带回了点击项的参数，这个点击项就包含了关卡信息 eventId ，还扩展了事件类型，表示是在 ccTouchBegin 还是 ccTouchEnd 种调用的，并依次做相应的逻辑操作。</p>
+
+<p>下面具体实现回调函数的逻辑处理，它实现了点击项高亮显示，点击成功时通过 CCMessageBox 弹出提示：</p>
+
+<p>``` c++</p>
+
+<pre><code>void LevelView::touchEventAction(LsTouch *touch, int type){
+    // type 事件类型，0：touchbegin 1：touchend 触发 2：touchend 未触发
+    if (touch)
+        CCLog("touch event action id: %d  type: %d", touch-&gt;getEventId(), type);
+    int selectTag = 10001;
+    if (type == 0 &amp;&amp; touch){
+        getScrollView()-&gt;getContainer()-&gt;removeChildByTag(selectTag);
+        // 添加选撞状态的精灵，背景 高亮显示
+        CCSprite* sprite = CCSprite::create("level/sel.png");
+        sprite-&gt;setScaleX(2);
+        sprite-&gt;setScaleY(4);
+        sprite-&gt;setPosition(touch-&gt;getPosition());
+        // 这里使用了 zOrder = 1 以保证，高亮图片显示在 实际关卡图片后面
+        getScrollView()-&gt;getContainer()-&gt;addChild(sprite, 1, selectTag);
+
+    } else {
+        getScrollView()-&gt;getContainer()-&gt;removeChildByTag(selectTag);
+    }
+    if (type == 1 &amp;&amp; touch){
+        // 收到 type 为 1 表示触发关卡选择
+        CCString* str = CCString::createWithFormat("您选择的关卡为 %d .", touch-&gt;getEventId() + 1);
+        CCMessageBox("关卡", str-&gt;getCString());
+    }
+}
+</code></pre>
+
+<p>```</p>
+
+<p>这里的 LsTouch 根据实际情况 比 原来（原来是指《<a href="http://blog.leafsoar.com/archives/2013/05-25-10.html">多层 UI 触摸事件的轻量级设计</a>》）做了些改进。</p>
+
+<ul>
+<li>内部判断去除了一些不必要的判断</li>
+<li>修改消息类型，添加 type 参数，我们可以根据次参数判断消息类型</li>
+<li>修改 touchEventAction 为总是回调（在发送消息时），而原来的做法是，这样做的好处是我们可以根据第一个参数是否为空，来做一些处理，而原来只在有点击操作才回调</li>
+</ul>
+
+
+<p>关于这里使用继承 LsTouchEvent 实现 touchEventAction 回调函数的方式，需要简单说明以下，这里设计的核心是使用一个集合管理一推“可触摸”项。至于我用什么方式实现，那不重要，例如换种设计，不用继承实现接口，使用 回调函数绑定，就像绑定 CCMenu 回调一样，如果 C++ 能够像 Java 编写匿名类实现回调，那就更优雅了～实现要 “<strong>达到可用简单，通用难！</strong>”，这里只是一种可行方案。</p>
+
+<hr />
+
+<h2>锦上添花，添加当前页指示球</h2>
+
+<p>当前界面的所有功能已经实现完毕，如果使用它们，你需要注意一些地方，比如关卡精灵可以根据自己需要扩展其元素内容等。由于时滚动分页，为了一目了然我们当前的页，所以也添加了代码实现在屏幕上方设定了 <strong>页数指示球</strong>（我给起的名），指示球会在你拖动界面的时候有动态效果，放大当前 页数的指示球，给予更好的用户体验，关于这部分代码我就不贴了，可以直接从源码里面看见，方法名为 <strong>setCurPageBall</strong>，它会根据总页数和当前页数自动处理，你所需要做的只是在合适的时候调用它即可。</p>
+
+<p>注意：为了让问题更有针对性，在本文中所有的位置关系所参考的都是 WinSize，
+这意味着，如果你在不同的屏幕适配方案中可能需要有所改动，对屏幕适配这里有一篇文章可以作为参考《<a href="http://blog.leafsoar.com/archives/2013/05-10-19.html">Cocos2d-x 屏幕适配新解</a>》。</p>
+
+<p><img src="/images/2013/2013-07-27-1.jpg" alt="图片" /></p>
+
+<p>它完成了以下几个功能（<a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/MacCpp/Classes/LevelView.cpp">示例源码</a>）：</p>
+
+<ul>
+<li>帮助界面功能的实现：一个可拖动滚屏的界面展示</li>
+<li>实现滚屏的自动校队，一页一页展示</li>
+<li>关卡点击事件处理，实现关卡功能</li>
+<li>选中关卡的高亮显示，背景标示</li>
+<li>由于没有使用 CCMenu ，所以不存在触摸优先级问题，在点击 “关卡” 的同时可拖动屏幕</li>
+<li>点击抖动误操作判断（如本来想点击关卡，如果移动了位置[移动范围大于指定值]，那么将执行拖动操作）</li>
+<li>当前页指示球功能</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[深入理解 Cocos2d-x 内存管理]]></title>
+    <link href="http://leafsoar.github.io/archives/2013/06-04.html"/>
+    <updated>2013-06-04T10:50:00+08:00</updated>
+    <id>http://leafsoar.github.io/archives/2013/cocos2dx-mem</id>
+    <content type="html"><![CDATA[<p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
+
+<p>我觉得 <strong>最好的学习方式是以自己的语言组织，说与别人听 ～</strong> 这样对自己：更容易发现平时容易忽略的问题，对别人：或多或少也有所助益！以学习为目的，而别人的受益算是附带的效果，这样一个出发点 ~</p>
+
+<p>由浅入深，总览全局（或者由整体到局部）是我喜欢的出发点，或者思考角度，我不喜欢拘泥于细节的实现，因为那会加大考虑问题的复杂度，所以 <strong>把复杂的问题简单化，是必然的过程。</strong> 那么本文就说说 Cocos2d-x 的架构是如何设计以方便内存管理的。从理论到实践 ~(当然是从我看问题的角度 :P，读者如有异议，欢迎讨论！文本使用 cocos2d-x 2.0.4 解说。)</p>
+
+<!-- more -->
+
+
+<hr />
+
+<h2>引用计数的由来</h2>
+
+<p>cocos2d-x 的世界是基于 <strong>CCObject</strong> 类构建的，其中的每个元素：层、场景、精灵等都是一个个 CCObject 的对象。所以 <strong>内存管理的本质就是管理一个个 CCObject</strong>。作为一个 cocos2d 的 C++ 移植版本，在它之前有很多其它语言的 <strong>实现</strong>，从架构层次来说，这与语言的实现无关（比如 CCNode 的节点树形关系，其它语言也可以实现，如果是内存方便，C# 等更是无需考虑），但就从内存管理方面来说，参考了 OC （Objective-C） 的内存管理实现。</p>
+
+<p>一个简单的<strong>自动管理原则</strong>：<strong>CCObject 内部维护着一个引用计数，引用计数为 0 就自动释放 ～</strong>（如果么有直接做如 delete 之类的操作）。那么此时可以预见，<strong>管理内存的实质就是管理这些 &ldquo;引用计数&rdquo; </strong> 了！使用 retain 和 release 方法对引用计数进行操作！</p>
+
+<hr />
+
+<h2>为什么要有自动释放池 及其作用</h2>
+
+<p>我们知道 cocos2d-x 使用了自动释放池，自动管理对象，知其然！其所以然呢？<strong>为什么需要自动释放池</strong>，它在整个框架之中又起着什么样的作用！在了解这一点之前，我们需要 <strong>知道 CCObject 从创建之初，到最终销毁</strong>，经历了哪些过程。在此，一叶总结以下几点：</p>
+
+<ul>
+<li>刚创建的对象，而 <strong>为了保证在使用之前不会释放</strong>（至少让它存活一帧），所以<strong>自引用</strong>（也就是初始为1）</li>
+<li>为了确定是否 <strong>实际使用</strong>，所以需要在一个合适的时机，<strong>解除自身引用。</strong></li>
+<li>而这个何时的时机正是在<strong>帧过度之时。</strong></li>
+<li>帧过度之后的对象，<strong>用则用矣，不用则弃！</strong></li>
+<li>由于已经解除了自身引用，所以它的<strong>引用被使用者管理</strong>（一般而言，内部组成树形结构的链式反应，如 CCNode）。</li>
+<li>链式反应，也就是，如果释放一个对象，也会释放它所引用的对象。</li>
+</ul>
+
+
+<p>上面是一个对象的大致流程，我们将对象分为<strong>两个时期</strong>，一个是刚<strong>创建时期</strong>，自引用为 <strong>1</strong>（如果为 0 就会释放对象，这是基本原则，所以要大于 0） 的时期，另一个是<strong>使用时期</strong>。上面说到，为了保证创建时期的对象不被销毁，所以自引用(<strong>并没有实际的使用</strong>)初始化为 1，这就意味着我们需要一个合适的时机，来解除这样的自引用。</p>
+
+<p><strong>何时？</strong>在帧过度之时！(这样可保证当前帧能正确使用对象而没有被销毁。)<strong>怎么样释放？</strong>由于是自引用，我们并不能通过其它方式访问到它，所以就有了自动释放池，我们 <strong>变相的将“自引用”转化“自动释放池引用”，来标记一个 “创建时期的对象”</strong>。然后在帧过度之时，通过自动释放池管理，统一释放 “释放池引用”，也就意味着，去除了“自身引用”。<strong>帧过度之后的对象，才是真正的被使用者所管理。</strong> 下面我们用代码来解释上述过程。</p>
+
+<p>通常我们使用 <code>create();</code> 方法来创建一个自动管理的对象，而其内部实际操作如下：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 初始化一个对象
+static CCObject* create() 
+{
+    // new CCObject 对象
+    CCObject *pRet = new CCObject(); 
+    if (pRet &amp;&amp; pRet-&gt;init()) 
+    {
+        // 添加到自动释放池
+        pRet-&gt;autorelease(); 
+        return pRet; 
+    } 
+    else 
+    { 
+        delete pRet; 
+        pRet = 0; 
+        return 0; 
+    } 
+}
+
+// 我们看到初始化的对象 自引用 m_uReference = 1
+CCObject::CCObject(void)
+:m_uAutoReleaseCount(0)
+,m_uReference(1) // when the object is created, the reference count of it is 1
+,m_nLuaID(0)
+{
+    static unsigned int uObjectCount = 0;
+
+    m_uID = ++uObjectCount;
+}
+
+// 标记为自动释放对象
+CCObject* CCObject::autorelease(void)
+{
+    // 添加到自动释放池
+    CCPoolManager::sharedPoolManager()-&gt;addObject(this);
+    return this;
+}
+
+// 继续跟踪
+void CCPoolManager::addObject(CCObject* pObject)
+{
+    getCurReleasePool()-&gt;addObject(pObject);
+}
+
+// 添加到自动释放池的实际操作
+void CCAutoreleasePool::addObject(CCObject* pObject)
+{
+    // 内部是由一个 CCArray 维护自动释放对象，并且此操作 会使引用 + 1
+    m_pManagedObjectArray-&gt;addObject(pObject);
+
+    // 由于初始化 引用为 1，上面又有操作，所以引用至少为 2 （可能还被其它所引用）
+    CCAssert(pObject-&gt;m_uReference &gt; 1, "reference count should be greater than 1");
+    ++(pObject-&gt;m_uAutoReleaseCount);
+    // 变相的将自身引用转化为释放池引用，所以减 1
+    pObject-&gt;release(); // no ref count, in this case autorelease pool added.
+}
+</code></pre>
+
+<p>```</p>
+
+<p>上面便是通过 <code>create()</code> 方法创建对象的过程。文中说到，一个合适的时机，解除自身引用（也就是释放池引用），那这又是在何时进行的呢？程序的运行有一个主循环，控制着每一帧的操作，在每一帧画面画完之时会自动调用 <code>CCPoolManager::sharedPoolManager()-&gt;pop();</code> 方法 ( 具体可参见文章<a href="http://blog.leafsoar.com/archives/2013/05-05-23.html">Cocos2d-x 程序是如何开始运行与结束的</a> ，这里我们只要知道每一帧结束都会调用 pop() 方法)，来自动清理 <strong>创建时期</strong> 的引用。现在我们就来看看 <code>pop()</code> 的方法实现：</p>
+
+<p>``` c++</p>
+
+<pre><code>void CCPoolManager::pop()
+{
+    if (! m_pCurReleasePool)
+    {
+        return;
+    }
+
+    // 当前释放池个数，pop 使用栈结构
+     int nCount = m_pReleasePoolStack-&gt;count();
+    // 释放池当中存放的都是 创建时期 对象，此时解除释放池引用
+    m_pCurReleasePool-&gt;clear();
+
+    // 当前释放池，出栈，在这里可以看到判断 nCount 是否大于 1，文后将会对此做具体说明
+      if(nCount &gt; 1)
+      {
+        m_pReleasePoolStack-&gt;removeObjectAtIndex(nCount-1);
+
+//         if(nCount &gt; 1)
+//         {
+//             m_pCurReleasePool = m_pReleasePoolStack-&gt;objectAtIndex(nCount - 2);
+//             return;
+//         }
+        m_pCurReleasePool = (CCAutoreleasePool*)m_pReleasePoolStack-&gt;objectAtIndex(nCount - 2);
+    }
+
+    /*m_pCurReleasePool = NULL;*/
+}
+
+// 释放池引用清理工作
+void CCAutoreleasePool::clear()
+{
+    // 如果释放池存在 创建时期 的对象
+    if(m_pManagedObjectArray-&gt;count() &gt; 0)
+    {
+        //CCAutoreleasePool* pReleasePool;
+#ifdef _DEBUG
+        int nIndex = m_pManagedObjectArray-&gt;count() - 1;
+#endif
+
+        CCObject* pObj = NULL;
+        CCARRAY_FOREACH_REVERSE(m_pManagedObjectArray, pObj)
+        {
+            if(!pObj)
+                break;
+
+            --(pObj-&gt;m_uAutoReleaseCount);
+            //(*it)-&gt;release();
+            //delete (*it);
+#ifdef _DEBUG
+            nIndex--;
+#endif
+        }
+        // 移除释放池对创建时期对象的引用，从而使对象交由使用者全权管理
+        m_pManagedObjectArray-&gt;removeAllObjects();
+    }
+}
+</code></pre>
+
+<p>```</p>
+
+<p><strong>到这里，自动释放池的作用也就完成了！</strong> 可以说创建的对象在一帧 (<strong>但有特殊情况，下一段说明</strong>) 之后就完全脱离了 <strong>自动释放池的控制</strong>，自动释放池，对对象的管理也就在 <strong>创建时期起着作用</strong>！之后便交由使用者管理，释放。</p>
+
+<hr />
+
+<h2>对"释放池"的管理说明</h2>
+
+<p>我们知道了释放池管理着 <strong>创建时期</strong> 的对象，那么对于释放池本身是如何管理的？我们知道对于释放池，只需要有一个就已经能够满足我们的需求了，而在 cocos2d-x 的设计中，使用了集合管理 <strong>一堆</strong> 释放池。而在实际，它们又发挥了多大的用处？</p>
+
+<p>``` c++</p>
+
+<pre><code>// 释放池管理接口
+class CC_DLL CCPoolManager
+{
+    // 释放池对象集合
+    CCArray*    m_pReleasePoolStack;
+    // 当前操作释放池
+    CCAutoreleasePool*                    m_pCurReleasePool;
+
+    // 获取当前释放池
+    CCAutoreleasePool* getCurReleasePool();
+public:
+    CCPoolManager();
+    ~CCPoolManager();
+    void finalize();
+    void push();
+    void pop();
+
+    void removeObject(CCObject* pObject);
+    // 添加一个 创建时期 对象
+    void addObject(CCObject* pObject);
+
+    static CCPoolManager* sharedPoolManager();
+    static void purgePoolManager();
+
+    friend class CCAutoreleasePool;
+};
+
+// 我们从 addObject 开始看起，由上文可以 addObject 是由 CCObject 的 autorelease 自动调用的
+void CCPoolManager::addObject(CCObject* pObject)
+{
+    getCurReleasePool()-&gt;addObject(pObject);
+}
+
+CCAutoreleasePool* CCPoolManager::getCurReleasePool()
+{
+    // 如果当前释放池为空
+    if(!m_pCurReleasePool)
+    {
+        // 添加一个
+        push();
+    }
+
+    CCAssert(m_pCurReleasePool, "current auto release pool should not be null");
+
+    return m_pCurReleasePool;
+}
+
+void CCPoolManager::push()
+{
+    CCAutoreleasePool* pPool = new CCAutoreleasePool();       //ref = 1
+    m_pCurReleasePool = pPool;
+    // 像集合添加一个新的释放池
+    m_pReleasePoolStack-&gt;addObject(pPool);                   //ref = 2
+
+    pPool-&gt;release();                                       //ref = 1
+}
+</code></pre>
+
+<p>```</p>
+
+<p>从 addObject 开始分析，我们知道在 addObject 之前，会首先判断是否有当前的释放池，如果没有则创建，如果有，则直接使用，可想而知，在任何使用，任何情况，通过 addObject 只需要创建一个释放池便已经足够使用了。事实上也是如此。再来看 pop 方法。</p>
+
+<p>``` c++</p>
+
+<pre><code>void CCPoolManager::pop()
+{
+    if (! m_pCurReleasePool)
+    {
+        return;
+    }
+
+     int nCount = m_pReleasePoolStack-&gt;count();
+    // 清楚对 创建对象 的引用
+    m_pCurReleasePool-&gt;clear();
+
+    // 如果大于 1，这也保证着，在任何时候，总有一个释放池是可以使用的
+      if(nCount &gt; 1)
+      {
+          // 移除当前的释放池
+        m_pReleasePoolStack-&gt;removeObjectAtIndex(nCount-1);
+
+//         if(nCount &gt; 1)
+//         {
+//             m_pCurReleasePool = m_pReleasePoolStack-&gt;objectAtIndex(nCount - 2);
+//             return;
+//         }
+        // 将当前释放池设定为前一个释放池，也就是 “出栈”的操作
+        m_pCurReleasePool = (CCAutoreleasePool*)m_pReleasePoolStack-&gt;objectAtIndex(nCount - 2);
+    }
+
+    /*m_pCurReleasePool = NULL;*/
+}
+</code></pre>
+
+<p>```</p>
+
+<p><strong>看到这里</strong> 我就不解了！什么情况下才能用到多个释放池？按照设计的逻辑根本用不到。带着这个疑问，我在 <code>CCPoolManager::push()</code> 方法之内添加了一句话打印（修改源代码） <code>CCLog("这里要长长长的 **********");</code> ，然后重新编译源文件，运行程序，发现实际的使用中，push 只被调用了两次！我们知道，通过 addObject 可能会自动调用 <code>push()</code> 一次，但也仅有一次，所以一定是哪里手动调用了 <code>push()</code> 方法，才会出现这种情况，所以我继续翻看源代码，定位到了 <code>bool CCDirector::init(void)</code> 方法，在这里进行了游戏的全局初始化相关工作：</p>
+
+<p>``` c++</p>
+
+<pre><code>bool CCDirector::init(void)
+{
+    CCLOG("cocos2d: %s", cocos2dVersion());
+
+    ...
+    ...
+    m_dOldAnimationInterval = m_dAnimationInterval = 1.0 / kDefaultFPS;    
+    m_pobScenesStack = new CCArray();
+    m_pobScenesStack-&gt;init();
+
+    ...
+    ...
+    m_fContentScaleFactor = 1.0f;
+
+    ...
+    ...
+    // touchDispatcher
+    m_pTouchDispatcher = new CCTouchDispatcher();
+    m_pTouchDispatcher-&gt;init();
+
+    // KeypadDispatcher
+    m_pKeypadDispatcher = new CCKeypadDispatcher();
+
+    // Accelerometer
+    m_pAccelerometer = new CCAccelerometer();
+
+
+    // 这里手动调用了 push 方法，而在这之前的初始化过程中，间接的使用了 CCObject 的 autorelease，已经触发过一次 push 方法
+    CCPoolManager::sharedPoolManager()-&gt;push();
+
+    return true;
+}
+</code></pre>
+
+<p>```</p>
+
+<p><strong>所以我们便能够看到 push 方法被调用了两次</strong>，但其实如果我们把这里的手动调用放在方法的开始处，或者干脆就不使用 <code>CCPoolManager::sharedPoolManager()-&gt;push();</code> ，对程序也没任何影响，这样从头到尾，<strong>只创建了一个自动释放池，而这里多创建的一个并没有多大的用处。</strong> 或者用处不甚明显，因为多创建一个释放池是有其效果的，效果具体体现在哪里，那就是 <strong>可以使调用 push() 方法之前的对象，多存活一帧。</strong>，因为 pop 方法只对当前释放池做了 clear 释放。为了方便起见，我们使用 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 里面的方法观察每一帧的情况，看下面测试代码：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 关键代码如下
+CCLog("update index: %d", updateCount);
+
+// 在不同的帧做相关操作，以便观察
+if (updateCount == 1) {
+    // 创建一个自动管理对象
+    layer = LSLayer::create();
+    // 创建一个新的自动释放池
+    CCPoolManager::sharedPoolManager()-&gt;push();
+    // 再创建一个自动管理对象
+    sprite = LSSprite::create();
+} else if (updateCount == 2) {
+
+} else if (updateCount == 3) {
+
+}
+
+CCLog("update index: %d end", updateCount);
+
+/// 打印代码如下
+cocos2d-x debug info [update index: 1]
+// 第一帧创建了两个自动管理对象
+cocos2d-x debug info [LSLayer().()]
+cocos2d-x debug info [LSSprite().()]
+cocos2d-x debug info [update index: 1 end]
+// 第一个过度帧只释放了 sprite 对象
+cocos2d-x debug info [LSSprite().~()]
+cocos2d-x debug info [update index: 2]
+cocos2d-x debug info [update index: 2 end]
+// 第二个过度帧释放了 layer 对象
+cocos2d-x debug info [LSLayer().~()]
+cocos2d-x debug info [update index: 3]
+cocos2d-x debug info [update index: 3 end]
+</code></pre>
+
+<p>```</p>
+
+<p>可以对比 sprite 和 layer 对象，两个对象被放在了不同的自动释放池之中。这就是 手动调用 <code>push()</code> 方法所能达到的效果，至于怎么利用这个特性，<strong>帮助我们完成特殊的功能？我想还是不用了</strong>，这会增加我们程序设计的 <strong>复杂度</strong>，在我看来，甚至想把，cocos2d-x 2.0.4 中那唯一一次调用的 <code>push()</code> 给删了，以保持简单（程序的第一次初始化“可能”会用到这个特性，不过目测是没有多大关系的了 : P），在这里只系统通过这个例子理解 自动释放池是怎样被管理的即可！</p>
+
+<p>从自动释放池管理 <strong>创建时期</strong> 对象，再到对释放池的管理，我们已经大概了解了一个对象的生命周期经历了哪些！ 下面简单说说 <strong>使用时期</strong> 的对象管理。</p>
+
+<hr />
+
+<h2>树形结构的链式反应</h2>
+
+<p>文中我们知道了，自动释放池的存在意义，在于对象 <strong>创建时期</strong> 的处理，而仅仅理解了自动释放池，对于我们使用 cocos2d-x 不够，远远不够！自动释放池只是解决对象初始化的问题，仅此而已，而要在整个使用过程中，相对的自动化管理，那么必须理解两个概念，<strong>树形结构</strong> 和 <strong>链式反应</strong> （链式反应，不错的说法，就像原子弹爆炸一样，一传十，十传百 ：P）</p>
+
+<p>我们当前运行这一个场景，场景初始化，添加了很多层，层里面有其它的层或者精灵，而这些都是 CCNode 节点，以场景为根，形成一个树形结构，场景初始化之后（一帧之后），这些节点将完全 <strong>依附</strong> (内部通过 retain) 在这个树形结构之上，全权交由树来管理，当我们 <strong>砍去一个树枝</strong>，或者将树 <strong>连根拔起</strong>，那么在它之上的“子节点”也会跟着去除(内部通过 release)，这便是链式反应。</p>
+
+<p><a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>，此文这种实现的本质既是 <strong>强化</strong>这种 <strong>链式反应</strong>，也是解决内存可能出错的一个解决方案。如下（前文片段，具体详见前文）：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 方式一：那么我们的使用过程
+LUser* lu = LUser::create();
+lu-&gt;m_sSprite = CCSprite::create("a.png");
+// 如果这里不 retain  则以后就用不到了
+lu-&gt;m_sSprite-&gt;retain();
+
+// 方式二：使用方法
+LUser* lu = LUser::create();
+lu-&gt;m_sUserName = "一叶";
+// 这里的 sprite 会随着 lu 的消亡而消亡，不用管释放问题了
+lu-&gt;setSprite(CCSprite::create("a.png"));
+</code></pre>
+
+<p>```</p>
+
+<p>我们看到方式二相比方式一的设计，它通过 setSprite 内部对 sprite 本身 retain，从而实现<strong>链式反应</strong>，而不是直接使用 <code>lu-&gt;m_sSprite-&gt;retain();</code>，这样的好处是，我只要想着释放 LUser，而不用考虑LUser 内部 sprite 的引用情况就行了。如此才能把 cocos2d-x 内存的自动管理特性完全发挥 ~</p>
+
+<p>而要实现这样管理的一个明显特征就是，隐藏 <code>retain</code> 和 <code>release</code> 操作 ~</p>
+
+<hr />
+
+<h2>稍作总结</h2>
+
+<p>关于 cocos2d-x 的内存管理从使用到原理，系列文章就到这里了！（三篇也算系列 = =!） 由表象到内部的思考探索过程，其实在 <strong>浅说</strong> 当中对 cocos2d-x 的使用，便已经能够知晓内部细节设计之一二，透过现象看本质！三篇文章包含了，使用浅说（简单的测试），一种防止内存泄漏的设计（加强链式反应），最后纵览 cocos2d-x 的内存管理框架，对 CCObject 的生命周期做了简单的说明，当然其中还是隐藏一些细节的，比如管理都是用 CCArray 来管理，但我们并没有对 CCArray 做介绍，它是如何添加元素，如何引用等。在任何时候我们只针对一个问题进行思考，那我们该把 CCArray 这样的辅助工具类放在何处，如果你了解当然最好，不过不了解，那便 <strong>存疑</strong> ，然后对相应的问题，分而治之 ~</p>
+
+<p><strong>存疑</strong> 可以帮助一叶在某个时刻只针对某一个问题进行思考，从而使问题变的简单。对文中所涉及的到的两个类 <code>CCPoolManager</code> 和 <code>CCAutoreleasePool</code> 其中所有的方法并没有面面俱到，当然有了整体思路，去 <strong>填充那些</strong> 小疑问将会变得简单。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Cocos2d-x 内存管理的一种实现]]></title>
+    <link href="http://leafsoar.github.io/archives/2013/05-29.html"/>
+    <updated>2013-05-29T10:10:00+08:00</updated>
+    <id>http://leafsoar.github.io/archives/2013/cocos2dx-property</id>
+    <content type="html"><![CDATA[<p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
+
+<p>而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d-x ，或者说，缺少那么一种 <strong>规范</strong>，如果存在了这么一种 <strong>规范</strong>，而使得 Cocos2d-x 更为简单优雅，那势必是游戏的开发过程，更加从新所欲，把重点放在游戏本身的设计之上。</p>
+
+<h2>Retain 与 Release 乃万恶之源</h2>
+
+<p>稍微了解一点就能知道 Cocos2d-x 是基于引用计数来管理内存的，应用计数的加减就是 retain 和 release 方法的实现。在大多数情况下我们不用 <strong>显示</strong> 的去调用这两种方法，如在 <strong>CCNode</strong> 的 <strong>addChild</strong> 和 <strong>removeChild</strong> 方法，<strong>CCArray</strong> 的 <strong>addObject</strong> 和 <strong>removeObject</strong> 等这样成双成对的方法，对于这些的使用很简单，一叶上篇文章 <strong><a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a></strong> 从概念上简单的分析了内部对象的生命周期特点，在此 <strong>浅说</strong> 之中，我刻意的绕过了它的底层实现，并没有深究其原理，对引用计数等概念也只是几句话一带而过，重点放在使用者该关心什么，该注意什么。因为我觉得 <strong>引用计数是个坑，一个很大的坑 ~</strong></p>
+
+<!-- more -->
+
+
+<p>当我们想要长期 <strong>持有</strong> 某个对象的时候，我们会用到 retain 和 release 方法，而这种情况我们会经常遇到，如那些 <strong>非CCNode</strong> 类型，比如一个运行场景里面有一个 <strong>CCString</strong> （以CCString 为例，显然此刻你更愿意用 std::string）保存的场景名称，以便我们随时使用，那我们一个简单的做法就是在场景初始化的时候创建 CCString 对象，赋值，然后 retain，在场景结束或者析构函数中 release，这很简单，一个 retain 对应一个 release 就没有问题了，如果问题稍微变的复杂，在程序的运行中，我们可能会改变这个属性值，创建一个新的 CCString 去替换它，那在执行这些操作的时候我们需要很多判断，是否已经有值，首先要解除之前的引用，在重新引用新的对象~~<strong>诸如此类</strong>，如果中间不需要此对象，中间直接释放，那么我们会 <strong>非常华丽的看到在程序代码之中到处穿插着 retain 和 release 操作</strong>。而这些 retain 和 release 虽然成对出现，但不一定在同一个方法，<strong>这就演变成了，所在的不同方法也要成对的调用。</strong></p>
+
+<p><strong>你把青蛙放到冷水里，再慢慢地加热，青蛙感觉不到什么，直到最后被烫死。</strong> 使用 retain 和 release 就正如温水里的青蛙，刚开始到也没觉得什么，引用计数概念多好。而到后来，发现越来越难以控制，为时以晚矣～</p>
+
+<p>“如果说C语言给了你足够的绳子吊死自己，那么C++给的绳子除了够你上吊之外，还够绑上你所有的邻居，并提供一艘帆船所需的绳索。”（摘自 <strong>UNIX痛恨者手册</strong>） 而此时 ~~~</p>
+
+<h2>建立规范 完全消灭 retain 和 release</h2>
+
+<p>既然说 retain 和 release 乃万恶之源，那么我们只要 <strong>从源头上，解决这个问题</strong>，如此一切将会变的非常简单，我们将建立一种类似 addChild 这样的 <strong>内部处理</strong> 机制，不用显示的调用 retain 和 release ，从而杜绝了 retain “漫天飞”的可能。而要实现这样的机制，只需简单的设计即可 ~代码实现如下<a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/Learn/Classes/Property/Property.h">源码示例</a>：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 为了方便起见，自定义宏，并且为 varName 的实现加上了 __ls_ 的前缀，前缀可以修改，可以很长很长很长
+// 加 __ls_ 前缀是为了，在使用的过程只通过 set 和 get 属性包装器调用，而不要直接使用此属性
+#define LS_PRE(p) __ls_##p
+//#define LS_PRE(p) __retain_##p            // 其它前缀都行，目的是为了不让在直接使用此类型对象
+
+//  此处定义以弃用
+//  #define LS_PROPERTY_RETAIN(varType, varName, funName)\
+//  private: varType LS_PRE(varName);\
+//  public: void set##funName(varType value){\
+//      CC_SAFE_RELEASE_NULL(LS_PRE(varName));\
+//      LS_PRE(varName) = value;\
+//      CC_SAFE_RETAIN(LS_PRE(varName));\
+//  }; \
+//  public: varType get##funName(){return LS_PRE(varName);};
+
+// 经朋友提醒，发现 cocos2d-x 已经实现了相应功能的宏，并且更好用，那这里的二次包装就算是仅仅加个前缀吧 ！！！
+#define LS_PROPERTY_RETAIN(varType, varName, funName)\
+    CC_SYNTHESIZE_RETAIN(varType, LS_PRE(varName), funName);
+
+// 初始化和释放包装宏，主要为了封装前缀，始定义统一
+#define LS_P_INIT(p) LS_PRE(p)(0)
+#define LS_P_RELEASE(p) CC_SAFE_RELEASE_NULL(LS_PRE(p))
+
+/**
+ * 自定义类型数据：用户信息
+ */
+class LUser: public cocos2d::CCObject{
+public:
+    CREATE_FUNC(LUser);
+    virtual bool init(){
+        return true;
+    };
+    LUser(){
+        CCLog("LUser()");
+    };
+    ~LUser(){
+        CCLog("LUser().~():%s", m_sUserName.c_str());
+    };
+
+    std::string m_sUserName;        // 用户名
+    std::string m_sPassword;        // 用户密码
+};
+
+class PropertyTest: public CCLayer{
+public:
+    CREATE_FUNC(PropertyTest);
+
+    virtual bool init(){
+        CCLog("PropertyTest().init()");
+        LUser* lu = LUser::create();
+        lu-&gt;m_sUserName = "leafsoar";
+        lu-&gt;m_sPassword = "123456";
+        setLUser(lu);
+
+        // 为了方便在不同帧测试，启用定时器
+        this-&gt;scheduleUpdate();
+
+        return true;
+    };
+
+    virtual void update(float fDelta){
+            // 为了方便观察，不让 update 内部无止境的打印下去
+            if (updateCount &lt; 5){
+                updateCount ++;
+                CCLog("update index: %d", updateCount);
+                // 在不同的帧做相关操作，以便观察
+                if (updateCount == 1){
+                    // 这里使用 getLUser 获取数据，而非 [__ls_]m_pLUser，所以我设置了前缀
+                    if (getLUser())
+                        CCLog("log lu: %s", getLUser()-&gt;m_sUserName.c_str());
+
+                } else if (updateCount == 2){
+                    // 重新赋值
+                    LUser* lu = LUser::create();
+                    lu-&gt;m_sUserName = "一叶";
+                    setLUser(lu);
+                } else if (updateCount == 3){
+                    if (getLUser())
+                        CCLog("log lu: %s", getLUser()-&gt;m_sUserName.c_str());
+                } else if (updateCount == 4){
+                    // 这里调用 seLUser(0),直接取消引用持有对象，如果不调用也没有关系
+                    // 因为在当前类析构的时候会自动检测释放
+                    setLUser(0);
+                }
+                CCLog("update index: %d end", updateCount);
+            }
+        };
+
+    // 构造函数，初始化 LS_PROPERTY_RETAIN 属性为空
+    PropertyTest():
+        LS_P_INIT(m_pLUser),
+        updateCount(0)
+    {
+    };
+
+    // 析构函数释放
+    ~PropertyTest(){
+        LS_P_RELEASE(m_pLUser);
+    };
+
+    // 使用 LS_PROPERTY_RETAIN 宏定义的属性，必须在构造和析构函数中初始化和释放
+    // 初始化为 0 或者 NULL，是为了在进行赋值操作前判断是否以有引用
+    // 析构函数释放是为了解除对持有对象的引用，如果有的话
+    LS_PROPERTY_RETAIN(LUser*, m_pLUser, LUser);
+
+private:
+    int updateCount;
+};
+
+/// 程序执行打印如下
+cocos2d-x debug info [PropertyTest().init()]
+// init 方法创建对象并通过 setLUser 持有对象
+cocos2d-x debug info [LUser()]
+cocos2d-x debug info [update index: 1]
+// 第一帧顺利访问 持有对象
+cocos2d-x debug info [log lu: leafsoar]
+cocos2d-x debug info [update index: 1 end]
+cocos2d-x debug info [update index: 2]
+// 第二帧创建新的 用户信息
+cocos2d-x debug info [LUser()]
+// 通过 setLUser 改变用户信息，这会使得之前设置的用户信息“自动”释放
+cocos2d-x debug info [LUser().~():leafsoar]
+cocos2d-x debug info [update index: 2 end]
+cocos2d-x debug info [update index: 3]
+// 跨帧继续访问新值
+cocos2d-x debug info [log lu: 一叶]
+cocos2d-x debug info [update index: 3 end]
+cocos2d-x debug info [update index: 4]
+// 调用了 setLUser(0) 说明已经解除了之前持有对象的引用，如果有的话
+cocos2d-x debug info [LUser().~():一叶]
+cocos2d-x debug info [update index: 4 end]
+cocos2d-x debug info [update index: 5]
+cocos2d-x debug info [update index: 5 end]
+</code></pre>
+
+<p>```</p>
+
+<p>通过上面的例子，可以看到将 <strong>持有对象</strong> 的操作变的非常简单，<strong>只通过</strong> set 和 get 属性包装器存取数据，而并没有 <strong>显示</strong> 的调用 retain 和 release 方法来操作，最大程度的自动化管理引用计数问题，一切皆在掌控之中。从此，世界清净了 ~ <strong>你不用再为何时 retain 何处 release 而烦恼。</strong></p>
+
+<p>而要做到如上的使用方法，在定义之初需规范化设计，大致如下：</p>
+
+<ul>
+<li>通过 <strong>LS_PROPERTY_RETAIN</strong> 宏创建 <strong>可持有对象属性</strong>，并自动创建 set 和 get 属性包装器。宏的设计并非毫无来由，我们知道 cocos2d-x 内部定义了很多以 <strong>CC_</strong> 为前缀的宏，方便使用，比如 <strong>CC_PROPERTY[xxx]</strong> 此类。set 方法会自动的根据需要处理 retain 和 release。</li>
+<li>宿主类的构造函数必须初始化对象为 NULL 或者 0，这是 C++ 的特性使然。LS_P_INIT，简化了操作。</li>
+<li>宿主类的析构函数必须释放对象[如果有]，这样我们就不用 <strong>显示</strong> 的调用释放了。可以通过 LS_P_RELEASE 调用。</li>
+</ul>
+
+
+<h3>LS_PROPERTY_RETAIN 宏的实现</h3>
+
+<p>在上面的例程中，我们使用了 <strong>LS_PROPERTY_RETAIN(LUser*, m_pLUser, LUser);</strong> 定义一个属性，那么我们看这个宏做了哪些事情，我们展开这个宏看看：</p>
+
+<p>``` c++</p>
+
+<pre><code>LS_PROPERTY_RETAIN(LUser*, m_pLUser, LUser);
+// 展开如下
+private:
+    // 定义私有属性
+    LUser* __ls_m_pLUser;
+public:
+    // 实现 set 方法
+    void setLUser(LUser* var){
+        // 首先释放当前的持有对象，没有则罢，如果有，那么就 release，因为如果有值，毕定是通过此方法设置并 retain 的
+        if (__ls_m_pLUser != var){
+            // 持有新的对象，这些都是 SAFE  安全操作的
+            CC_SAFE_RETAIN(var);
+            // 这里是 cocos2d-x 提供的宏，就不展开了               
+            CC_SAFE_RELEASE(__ls_m_pLUser);
+            // 设置新的属性
+            __ls_m_pLUser = var;
+        }
+    }; 
+public:
+    LUser*  getLUser(){
+        // 直接返回持有对象
+        return __ls_m_pLUser;
+    };
+</code></pre>
+
+<p>```</p>
+
+<p>基本在设计之时，满足以上规范，就能想这里一样，通过 set 和 get 简单的对可持有对象进行任意的操作了。</p>
+
+<h2>应用</h2>
+
+<p>这样的设计使得 <strong>所有基于</strong> CCObject 的类型都能够方便的使用。那我们就能够很容易的持有 CCNode，层，精灵，CCArray，等数据了。而且不会看到漫天飞舞的 retain 和 release ~</p>
+
+<p>当然作用还不止如此，我们可能创建自己的类型继承 CCObject 以方便统一管理，在配合 CCArray ，使自定义的数据和 cocos2d-x <strong>无缝的集成</strong>。有些游戏需要处理很多数据，如网络传输接受的数据，自定义常用数据等 ~</p>
+
+<p>文中我们自定义了 LUser 是继承于 CCObject  的，这只是简单数据类型，复杂点的，LUser 中包含了其它 CCObject 的数据，如果按照以前的写法，设置之后就 retain ，那很难判断在哪里 release。如下：</p>
+
+<p>``` c++</p>
+
+<pre><code>class LUser: public cocos2d::CCObject{
+public:
+    CREATE_FUNC(LUser);
+    virtual bool init(){
+        return true;
+    };
+    LUser(){
+        CCLog("LUser()");
+    };
+    ~LUser(){
+        CCLog("LUser().~():%s", m_sUserName.c_str());
+    };
+
+    std::string m_sUserName;        // 用户名
+    std::string m_sPassword;        // 用户密码
+
+    // 其它数据
+    CCSprite* m_pSprite;
+};
+
+// 那么我们的使用过程
+LUser* lu = LUser::create();
+lu-&gt;m_sSprite = CCSprite::create("a.png");
+// 如果这里不 retain  则以后就用不到了
+lu-&gt;m_sSprite-&gt;retain();
+</code></pre>
+
+<p>```</p>
+
+<p>LUser 持有 m_sSprite 正如 文中 PropertyTest 持有 m_pLUser 一样，我们重新设计：</p>
+
+<p>``` c++</p>
+
+<pre><code>class LUser: public cocos2d::CCObject{
+public:
+    CREATE_FUNC(LUser);
+    virtual bool init(){
+        return true;
+    };
+    LUser():
+        LS_P_INIT(m_pSprite)
+    {
+        CCLog("LUser()");
+    };
+    ~LUser(){
+        CCLog("LUser().~():%s", m_sUserName.c_str());
+        LS_P_RELEASE(m_pSprite);
+    };
+
+    std::string m_sUserName;        // 用户名
+    std::string m_sPassword;        // 用户密码
+
+    // 其它数据
+    LS_PROPERTY_RETAIN(CCSprite*, m_pSprite, Sprite);
+
+};
+
+// 使用方法
+LUser* lu = LUser::create();
+lu-&gt;m_sUserName = "一叶";
+// 这里的 sprite 会随着 lu 的消亡而消亡，不用管释放问题了
+lu-&gt;setSprite(CCSprite::create("a.png"));
+</code></pre>
+
+<p>```</p>
+
+<p>这样便将 m_pSprite 控制权，完全交给了 LUser 来处理了。基于这样的考虑，我们完全可以使用复杂的自定义类型，包含很多 CCObject 属性，而属性之中可能又包含其它 CCObject 的类型，而并不用担心释放问题，<strong>谁持有，谁管理，谁释放</strong>(而不会出现 lu->m_sSprite->retain(); 这样的情况)。这些数据可以在游戏中任意的传递，并且都是CCObject 类型的，并很好的结合 CCArray 管理。让自定义类型与 cocos2d-x 两者天衣无缝，配合无间 ~</p>
+
+<p>这里自定义的宏，加了个复杂的前缀，仅仅想提醒大家，只通过 set 和 get 来进行存取的操作，从而避免使用 retain 和 release 来管理，更简单的写法，使用 cocos2d-x 自带的宏即可：</p>
+
+<p>``` c++</p>
+
+<pre><code>//  定义可以加 "__" 双下划，以告诉自己这是可持有属性
+CC_SYNTHESIZE_RETAIN(LUser*, __m_pLUser, LUser);
+
+// 构造函数直接使用 __m_pLUser(0)
+
+// 析构函数调用如下
+CC_SAFE_RELEASE_NULL(__m_pLUser);
+
+// 如此倒也省事，事省 : P
+</code></pre>
+
+<p>```</p>
+
+<h3>为什么 LUser 继承自 CCObject</h3>
+
+<p>如果不集成自 CCObject 而使用原来的 C++ 方式也并无不可，但 CCObject 的优势是很明显的，如果能够善于使用。如果你想在 cocos2d-x 一个CCNode绑定数据有 setUserObject() 方法，如果多个 LUser 那么可以用 CCArray 进行管理，如果你想使用通知功能 CCNotificationCenter，而此  LUser 是可被传递的，我们设置了 LUser 然后靠诉别人我更新了，发送一条通知，谁对这个通知感兴趣，那谁就自己处理去吧 ~ 如果 ~ 如果你对此文感兴趣，不妨一试 ~</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[多层 UI 触摸事件的轻量级设计]]></title>
+    <link href="http://leafsoar.github.io/archives/2013/05-25.html"/>
+    <updated>2013-05-25T10:10:00+08:00</updated>
+    <id>http://leafsoar.github.io/archives/2013/cocos2dx-ui-event</id>
+    <content type="html"><![CDATA[<p><strong>轻量级</strong>:一叶非常喜欢的名词，在重量级和轻量级之间，如果做选择的话，一定会选择轻量级，它的特点首先是设计简单小巧，使用方便，更具有灵活性，扩展方便。重量级则大而丰富，全面，但略显笨重，在程序设计之初大多需要全盘考虑。而轻重之间的概念是相对而言，并没有严格的界限。</p>
+
+<h2>Cocos2d-x 触摸事件机制概论</h2>
+
+<p>在 cocos2d-x 使用触摸来触发一些操作是很常用的功能，如果界面非常简单，只需要启用相应层的触摸功能，并处理其触摸事件即可，而如果界面的 UI 复杂，多层管理，又有着隐藏控制，灵活多变，比如 MMO 游戏，当然手游不会 <strong>那么</strong> 复杂，那么现有的机制实现起来就显得捉襟见肘了，即便实现，也很难维护，而一个简单的方式是 <strong>只在场景的 基层 接受触摸消息，然后由此基层向上层发送触摸的消息</strong>，上层再根据实际情况进行处理，判断可触摸元素优先级，是否隐藏，返回处理结果，再一层层向下传递，保证实际的操作是我们所期望的。</p>
+
+<!-- more -->
+
+
+<p>在基层接受触摸消息，然后向上层发送触摸消息，而在 cocos2d-x 中并没有这样一个机制，所以已经有人基于 cocos2d-x 实现了这样一个机制，比如我们 <strong>实现自己的场景、层等，和自己的 一套层级控制</strong>，这个控制具有传递触摸消息的机制，但是这样我们就不能继续使用原有的层级管理机制。还有 <strong>通过修改 cocos2d-x 的源代码，达到这样的效果</strong> ，而这样的 <strong>侵入 API</strong> 的方式不甚可取，无论如何，这样的方式略显笨重，使用之前需要做很多工作，算是重量级的设计思路吧 ~</p>
+
+<p>为了使用的简单，并基于以上考虑，所以想到要设计一个 <strong>轻量级 的复杂 UI 触摸事件管理机制</strong>。首先从使用者角度考虑，要使用简单，嵌入到现有 cocos2d-x 方便，并没有什么复杂的特性，其次从设计角度考虑，充分利用 cocos2d-x 现有的特性，保持自身的简洁，关于此点，将会在后面的文章内容体验。</p>
+
+<h2>抽象：轻量级设计的可行性分析</h2>
+
+<p>触摸事件，从触摸开始，到有效点击，然后触发点击事件，从这么一个过程我们提取 <strong>两个抽象概念</strong>，而这两个概念将是我们的设计核心内容。首先要有 <strong>“可触摸对象”</strong> 类，也就是界面上一个可点击操作的元素，我们知道在 cocos2d-x 中有 CCScene、CCLayer、CCNode 等，大多情况都只是作为 <strong>容器</strong> 使用，本身并不处理触摸操作，而这些内容我们完全不用关注。还需要一个<strong>“可触摸对象事件管理对象”</strong> 类型，就简称 <strong>管理类</strong> 吧，管理类管理可触摸对象。</p>
+
+<p>现在我们设想这样一种情况，场景基层作为管理层，在这之中维护着一个 “可触摸对象”的集合，当我们创建一个可触摸对象的并把它添加到界面上之时，我们将它添加到这个集合中，当然这个可触摸对象包含一些属性标示，比如设定事件 Id 等。无论界面怎么布局，层次关系如何复杂，我们只需要关注这个可触摸对象的集合即可。好了，现在我们点击界面，通过场景基层接受触摸消息，获得点击的点，<strong>现在我们要做的就是判断哪个可触摸对象是有效点击就行了</strong>，从集合中找出有效点击的对象是很容易的。我们可以做一些判断，以确定哪个元素是有效点击，从而触发它的事件，而这个触发操作统一由管理层触发，现在我们来定一些有效点击的规则，并且这个规则是可以根据自己需要添加修改的：</p>
+
+<ul>
+<li>可触摸对象有个可触摸的范围（ContentSize），判断触摸的点是否在可触摸范围之内</li>
+<li>可触摸对象是否正在运行（IsRunning），排除了，已经从界面移除可触摸对象，可能没有及时释放而触发的情形</li>
+<li>可触摸对象是否隐藏 （IsVisible），如果不可见，当然无效点击</li>
+<li>可触摸对象的父层是否有隐藏，只需要不停的获取父层，判断是否存在以藏即可</li>
+<li>其它判断，自己添加定义 ~~~</li>
+</ul>
+
+
+<p>从集合中找出满足以上条件的元素是可行的，如果满足条件的有多个元素呢？这是可能的，比如两个可触摸对象的可触摸范围重叠，这是我们就需要对这两个元素做优先级比较了，如何比较？我们知道任意两个可触摸对象，是被添加的场景基层中的 <strong>树形结构</strong>，我们只需要分析这个树形结构，找到这两个可触摸节点的优先级即可，过程简说：找出两个节点最近的共同父节点，从而定位到此父节点下，两个元素所在的子节点，此两节点首先根据 ZOrder 判断优先，如果 ZOrder 相同，判断节点在父节点的索引位置，从而判断优先级。</p>
+
+<p>至此我们就能从可触摸对象集合中找到 <strong>一个</strong> 最终满足所有条件的对象，有了这个对象，我们就可以够精确的触发其触摸事件！</p>
+
+<h2>一个简单的设计雏形</h2>
+
+<p>雏形的设计一切从简，200 行代码左右。首先定义了一个 <strong>可触摸对象</strong> 类型 <strong>LsTouch</strong> ，它标示一个可触摸的对象，其中有一个 CCSprite 属性，显示和判断可点击范围都靠它（简单起见，这里可以定义自己的属性扩充，满足各种需要），还包含一个事件 Id 属性，知道触发什么事件（可以添加如事件类型属性等方便事件的处理）。另外定义了 <strong>LsTouchEvent</strong> 事件处理类，也是管理类，在使用的时候，场景基层实现它，并实现 <strong>touchEventAction</strong> 方法，此方法用户处理事件响应，而在 <strong>ccTouchesBegan</strong> 方法之内调用 LsToucheEvent 定义的 <code>sendTouchEvent(CCTouch* ccTouch)</code> 方法，传递 <strong>CCTouch</strong> 参数，之后方法内部会自动判断有效点击，并自动触发 touchEventAction 方法。</p>
+
+<p>在介绍实现之前，先通过简单的代码看看使用方法，从使用过程中体现它的简洁：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 场景基层定义，实现 LsTouchEvent 的 touchEventAction 事件响应方法即可
+class TouchEventTest: public CCLayer , public LsTouchEvent{
+public:
+    CREATE_FUNC(TouchEventTest)
+    ;
+    virtual bool init();
+
+    virtual void ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent);
+
+    virtual void touchEventAction(LsTouch* touch);
+};
+
+// TouchEventTest 实现
+bool TouchEventTest::init() {
+    bool bRef = false;
+    do {
+        CC_BREAK_IF(!CCLayer::init());
+
+        // 启用触摸
+        setTouchEnabled(true);
+
+        CCSize winSize = CCDirector::sharedDirector()-&gt;getWinSize();
+        CCPoint center = ccp(winSize.width/ 2, winSize.height / 2);
+
+        // 创建可触摸精灵
+        LsTouch* lt = LsTouch::create();
+        // 设置位置
+        lt-&gt;setPosition(center);
+        // 设置显示精灵
+        lt-&gt;setDisplay(CCSprite::create("Peas.png"));
+        // 添加到显示
+        this-&gt;addChild(lt);
+        // 添加到触摸管理，第二个参数，事件 Id
+        this-&gt;addLsTouch(lt, 100);
+
+        LsTouch* lt2 = LsTouch::create();
+        lt2-&gt;setPosition(ccpAdd(center, ccp(20, 10)));
+        lt2-&gt;setDisplay(CCSprite::create("Peas.png"));
+        addChild(lt2);
+        this-&gt;addLsTouch(lt2, 101);
+
+        bRef = true;
+    } while (0);
+
+    return bRef;
+}
+
+void TouchEventTest::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent) {
+    CCSetIterator it = pTouches-&gt;begin();
+    CCTouch* touch = (CCTouch*) (*it);
+    // 发送触摸消息，并在 touchEventAction 自动回调相应的事件
+    sendTouchMessage(touch);
+}
+
+void TouchEventTest::touchEventAction(LsTouch* touch) {
+    CCLog("touch event action id: %d", touch-&gt;getEventId());
+}
+</code></pre>
+
+<p>```</p>
+
+<p>上述使用方法，在 init() 方法中创建了两个可触摸元素，并设置显示的精灵，这里只实现了 ccTouchesBegan 方法，当然也可以添加 ccTouchesMoved 等方法的实现，这是为了雏形的设计简单，LsTouch 的实现可以自定义，显示什么，范围如何判断可以自行扩展，它本身也是个 CCNode ，所以可以通过 addChild 添加到界面显示，然后调用 addLsTouch 方法，添加到触摸管理，此时 精灵才能在调用 <strong>sendTouchMessage</strong> 时，接受触摸消息，从而判断点击的有效性，并在 touchEventAction 方法自动相应。这里可接受 <strong>复杂多变的界面设计</strong>，应为这并不会影响到触摸消息的管理，它是通过 addLsTouch 方法添加到内部的一个 <strong>CCArray</strong> 之中，如果从界面移除了可触摸元素，可以调用 <strong>removeLsTouch</strong> 方法，自动回收，如果没有显示的调用此方法，将会在基层场景销毁时，自动释放 CCArray 里面的所有元素，区别就是是否能够及时释放元素，但就使用来说，并没什么区别。</p>
+
+<p>简单的使用当然基于简单的设计，请看如下(<a href="https://github.com/leafsoar/ls-cocos2d-x/tree/master/Learn/Classes/TouchEventTest">源码查看</a>，GitHub 之上的源码今后可能有所扩展，而下面贴出的是此时的“雏形”)：</p>
+
+<p>``` c++</p>
+
+<pre><code>class LsTouchEvent;
+
+/**
+ * 定义可触摸元素，用于统一管理
+ */
+class LsTouch: public CCNode {
+public:
+    LsTouch();
+    ~LsTouch();
+    CREATE_FUNC(LsTouch);
+    virtual bool init() ;
+
+    // 设置显示项
+    void setDisplay(CCSprite* dis);
+
+    void setEventId(int eventId);
+    int getEventId();
+
+    /// 常规判断
+    bool selfCheck(CCTouch* ccTouch, LsTouchEvent* lsTe);
+
+private:
+    // 判断当前的元素是否被点击
+    bool containsCCTouchPoint(CCTouch* ccTouch);
+    bool isParentAllVisible(LsTouchEvent* lsTe);
+
+    // 用户保存显示精灵的 tag
+    static const int TAG_DISPLAY = 100;
+    int m_iEventId;
+
+};
+
+class LsTouchEvent {
+public:
+    LsTouchEvent();
+    ~LsTouchEvent();
+
+    void addLsTouch(LsTouch* touch, int eventId);
+
+    void removeLsTouch(LsTouch* touch);
+
+    bool sendTouchMessage(CCTouch* ccTouch);
+
+    // 返回优先级较高的可触摸对象
+    LsTouch* getPriorityTouch(LsTouch* a, LsTouch* b);
+
+    virtual void touchEventAction(LsTouch* touch) = 0;
+private:
+    CCArray* m_pLsTouches;
+};
+
+/// 类实现   
+#include "LsTouch.h"
+
+LsTouch::LsTouch() {
+    CCLog("LsTouch()");
+    m_iEventId = 0;
+}
+
+LsTouch::~LsTouch() {
+    CCLog("LsTouch().~()");
+}
+
+bool LsTouch::init() {
+
+    return true;
+}
+
+void LsTouch::setDisplay(CCSprite* dis) {
+    // 设置之前先清除，没有也无所谓
+    removeChildByTag(TAG_DISPLAY, true);
+    addChild(dis, 0, TAG_DISPLAY);
+}
+
+void LsTouch::setEventId(int eventId) {
+    m_iEventId = eventId;
+}
+
+int LsTouch::getEventId() {
+    return m_iEventId;
+}
+
+bool LsTouch::selfCheck(CCTouch* ccTouch, LsTouchEvent* lsTe) {
+    bool bRef = false;
+    // 可点击项的检测，可扩展
+    do {
+        // 是否通过点击位置检测
+        CC_BREAK_IF(!containsCCTouchPoint(ccTouch));
+        // 是否正在运行，排除可能存在已经从界面移除，但是并没有释放的可能
+        CC_BREAK_IF(!isRunning());
+
+        // 判断是否隐藏
+        CC_BREAK_IF(!isVisible());
+        // 这里可能还需要判断内部显示项目是否隐藏
+        ///// 暂留
+        // 不仅判断当前元素是否隐藏，还需要判断在它之上的元素直到事件处理层，是否存在隐藏
+        CC_BREAK_IF(!isParentAllVisible(lsTe));
+
+        bRef = true;
+    } while (0);
+    return bRef;
+}
+
+bool LsTouch::containsCCTouchPoint(CCTouch* ccTouch) {
+    // 获得显示内容
+    CCNode* dis = getChildByTag(TAG_DISPLAY);
+    CCSprite* sprite = dynamic_cast&lt;CCSprite*&gt;(dis);
+    CCPoint point = sprite-&gt;convertTouchToNodeSpaceAR(ccTouch);
+    CCSize s = sprite-&gt;getTexture()-&gt;getContentSize();
+    CCRect rect = CCRectMake(-s.width / 2, -s.height / 2, s.width, s.height);
+    return rect.containsPoint(point);
+}
+
+bool LsTouch::isParentAllVisible(LsTouchEvent* lsTe) {
+    bool bRef = true;
+    // 向父类转型，以便获取地址比较对象，LsTouchEvent 的对象必须同时直接或者简介继承 CCNode
+    CCNode* nLsTe = dynamic_cast&lt;CCNode*&gt;(lsTe);
+
+    CCNode* parent = getParent();
+    do {
+        // 如果遍历完毕，说明 LsTouch 不再 LsTouchEvent 之内
+        if (!parent) {
+            bRef = false;
+            break;
+        }
+        // 如果 LsTouch 在 LsTouchEvent 之内，返回 true
+        // 注意：如果想让LsTouchEvent 处理 不在其 CCNode 结构之内的元素，则取消此处判断
+        if (nLsTe == parent) {
+            break;
+        }
+        if (!parent-&gt;isVisible()) {
+            bRef = false;
+            break;
+        }
+        parent = parent-&gt;getParent();
+    } while (1);
+    return bRef;
+}
+
+LsTouchEvent::LsTouchEvent() {
+    CCLog("LsTouchEvent()");
+    m_pLsTouches = CCArray::create();
+    m_pLsTouches-&gt;retain();
+}
+
+LsTouchEvent::~LsTouchEvent() {
+    CCLog("LsTouchEvent().~()");
+    m_pLsTouches-&gt;release();
+}
+
+void LsTouchEvent::addLsTouch(LsTouch* touch, int eventId) {
+    touch-&gt;setEventId(eventId);
+    m_pLsTouches-&gt;addObject(touch);
+}
+
+void LsTouchEvent::removeLsTouch(LsTouch* touch) {
+    m_pLsTouches-&gt;removeObject(touch, true);
+}
+
+bool LsTouchEvent::sendTouchMessage(CCTouch* ccTouch) {
+    // 编写判断，集合中的哪个元素级别高，就触发哪一个
+    LsTouch* lsTouch = NULL;
+
+    // 获得点击的点
+    CCObject* pObj = NULL;
+    LsTouch* lt = NULL;
+    CCARRAY_FOREACH(m_pLsTouches, pObj) {
+        lt = dynamic_cast&lt;LsTouch*&gt;(pObj);
+        if (lt) {
+            if (lt-&gt;selfCheck(ccTouch, this)) {
+                if (lsTouch == NULL)
+                    lsTouch = lt;
+                else
+                    // 如果已存在符合条件元素，比较优先级
+                    lsTouch = getPriorityTouch(lsTouch, lt);
+            }
+        }
+    }
+// 比对最终只有一个元素触发
+    if (lsTouch){
+        touchEventAction(lsTouch);
+        return true;
+    }
+    return false;
+}
+
+LsTouch* LsTouchEvent::getPriorityTouch(LsTouch* a, LsTouch* b) {
+    // 触摸优先级通过 CCNode 树判断，也既是显示层次级别等因素
+    // 以当前元素为“根”向父类转型，以便获取地址比较对象，LsTouchEvent 的对象必须同时直接或者简介继承 CCNode
+    CCNode* nLsTe = dynamic_cast&lt;CCNode*&gt;(this);
+
+    // 共同的分枝
+    CCNode* allParent = NULL;
+    // 寻找 a 与 b 共同的分枝
+    CCNode* nAParent = a;
+    CCNode* nBParent = b;
+    CCNode* nAChild = NULL;
+    CCNode* nBChild = NULL;
+    do {
+        nAChild = nAParent;
+        nAParent = nAParent-&gt;getParent();
+        if (!nAParent)
+            break;
+
+        nBParent = b;
+        do {
+            nBChild = nBParent;
+            nBParent = nBParent-&gt;getParent();
+            if (!nBParent)
+                break;
+            if (nAParent == nBParent) {
+                allParent = nAParent;
+                break;
+            }
+            if (nBParent == nLsTe) {
+                break;
+            }
+        } while (1);
+        if (allParent)
+            break;
+        if (nAParent == nLsTe) {
+            break;
+        }
+    } while (1);
+
+    // 此处只需要判断 nAChild 和 nBChild 的优先级即可，默认返回 a
+    if (!nAChild || !nBChild)
+        return a;
+    // 根据 ZOrder 判断，如果 ZOrder一样，根据索引位置判断
+    if (nAChild-&gt;getZOrder() == nBChild-&gt;getZOrder())
+        return allParent-&gt;getChildren()-&gt;indexOfObject(nAChild) &gt; allParent-&gt;getChildren()-&gt;indexOfObject(nBChild)? a: b;
+    else
+        return nAChild-&gt;getZOrder() &gt; nBChild-&gt;getZOrder()? a: b;
+}
+</code></pre>
+
+<p>```</p>
+
+<h2>关于后续</h2>
+
+<p>实现了这样一个简单的事件处理模型，可以稍加修改扩展，基本能满足大部分的使用需求了，优势是使用简单，当然也有不足之处（这点也是今后需要完善的所在），比如事件的处理统一由场景基层实现调用，而我的理想使用方式，是 LsTouchEvent 可以添加到其它的 LsTouchEvent 之中，并且可以控制这样一种子层的可视范围（这确实很有用处，比如层级遮挡等），这样如果界面太过复杂不用把所有的事件响应都放在场景基层之中了，可以在任意的某一个层处理，分而治之，这样也就能够非常方便的处理非常复杂的 UI 逻辑！而要在现有雏形实现此功能，我们只需要在 LsTouchEvent 内部添加一个 LsTouchEvent 类型的集合，从而使场景基层管理到所有的 LsTouchEvent 事件相应层，LsTouchEvent 将会组成一个树形结构，也可以使触摸消息传递到所有的 LsTouchEvent 层中。如此，场景基层同样能管理到所有的可触摸元素，并判断优先级。</p>
+
+<p>cocos2d-x 本来提供的触摸消息机制，通过实现各个层的 ccTouchesBegan 等方法，使用确实灵活，但界面一复杂，就灵活的有些难以驾驭，比如我们需要在每个地方对内部元素做是否运行（IsRunning）是否隐藏(IsVisible)判断等，还需要对其相应的优先级多做了解，才能保证使用过程中不会出现什么纰漏。</p>
+
+<p>而对于本文，如果有什么异议，或者有什么其它的设计方式，欢迎留言讨论 ~</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Cocos2d-x 内存管理浅说]]></title>
+    <link href="http://leafsoar.github.io/archives/2013/05-22.html"/>
+    <updated>2013-05-22T23:30:00+08:00</updated>
+    <id>http://leafsoar.github.io/archives/2013/cocos2dx-mem-mgr</id>
+    <content type="html"><![CDATA[<p>使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其<strong>“机制”</strong>，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用，固为浅说。</p>
+
+<h2>无用对象 与 管理对象</h2>
+
+<p><strong>Cocos2d-x 将会在下一帧自动清理无用的对象，什么是无用的对象，通过 create() 方法创建的就是无用的对象。</strong></p>
+
+<p>为了简要说明，代码的组织设计一切从简，我们创建了两个辅助类和一个容器类 BaseLayer，在 BaseLayer 之上管理内部对象，并观察它是怎么自动管理对象的。实现了其 构造函数 方法和 析构函数，并做些日志打印，以方便我们观察：</p>
+
+<!-- more -->
+
+
+<p>``` c++</p>
+
+<pre><code>class LSLayer: public CCNode {
+public:
+    virtual bool init() {
+        CCLog("LSLayer().init()");
+        return true;
+    };
+
+    CREATE_FUNC(LSLayer);
+
+    LSLayer(){
+        CCLog("LSLayer().()");
+    };
+    ~LSLayer() {
+        CCLog("LSLayer().~()");
+    };
+};
+
+class LSSprite: public CCNode {
+public:
+    virtual bool init() {
+        CCLog("LSSprite().init()");
+        return true;
+    };
+
+    CREATE_FUNC(LSSprite);
+
+    LSSprite(){
+        CCLog("LSSprite().()");
+    };
+    ~LSSprite() {
+        CCLog("LSSprite().~()");
+    };
+};
+
+class BaseLayer: public CCLayer {
+public:
+    virtual bool init(){
+        CCLog("BaseLayer().init()");
+        // 我们创建了两个 “无用”对象
+        LSLayer* layer = LSLayer::create();
+        LSSprite* sprite = LSSprite::create();
+        // 使用了 layer 变为受“管理”的对象
+        this-&gt;addChild(layer);
+
+        return true;
+    };
+
+    CREATE_FUNC(BaseLayer);
+
+    BaseLayer(){
+        CCLog("BaseLayer().()");
+    };
+    ~BaseLayer(){
+        CCLog("BaseLayer().~()");
+    };
+};
+</code></pre>
+
+<p>```</p>
+
+<p>如上所示，我们在 BaseLayer 中创建了两个对象， layer 和 sprite，而只使用了 layer ，如果要运行上面的 BaseLayer 代码，我们需要创建一个 BaseLayer  的层对象，并将它添加到运行的场景或者层中： <code>addChild(BaseLayer::create());</code>，以保证 BaseLayer 开始运行，现在我们分析一下运行的结果：</p>
+
+<p>``` bash</p>
+
+<pre><code>// 由 addChild(BaseLayer::create()); 方法开始，创建并初始化了 BaseLayer 层
+cocos2d-x debug info [BaseLayer().()]
+cocos2d-x debug info [BaseLayer().init()]
+// BaseLayer init 方法我们创建了两个对象
+cocos2d-x debug info [LSLayer().()]
+cocos2d-x debug info [LSLayer().init()]
+cocos2d-x debug info [LSSprite().()]
+cocos2d-x debug info [LSSprite().init()]
+// 对象创建完成，紧接着这“无用”对象便已经释放了，而另一个已经使用的对象没有释放
+cocos2d-x debug info [LSSprite().~()]
+</code></pre>
+
+<p>```</p>
+
+<p>通过上面两个例子对比，对 cocos2d-x 的对象管理有了初步的认识，它会自动清理 <strong>“无用对象”</strong>。为了区分概念，我们将另一种对象称之为 <strong>“管理对象”</strong>，它是受管理的，有用的对象。比如上文中的 <strong>layer</strong>。</p>
+
+<p>！！这也算初步认识，当然，这至少解决了我们这样一个疑问：<strong>我们在场景初始化的时候，通过 create() 创建了成员变量，以备需要的时候使用，但发现在使用的时候这个对象已经不存在了，从而导致程序崩溃。</strong></p>
+
+<h3>管理对象不用之时立即回收</h3>
+
+<p>我们再继续演变 BaseLayer 的实现，以方便我们观察在每一帧对象的情况，添加实现了定时器功能：</p>
+
+<p>``` c++</p>
+
+<pre><code>class BaseLayer2: public CCLayer {
+public:
+    virtual bool init(){
+        CCLog("BaseLayer2().init()");
+        // 启用定时器，自动在每一帧调用 update 方法
+        this-&gt;scheduleUpdate();
+        return true;
+    };
+
+    // 定义 update 统计
+    int updateCount;
+    LSLayer* layer;
+    LSSprite* sprite;
+
+    virtual void update(float fDelta){
+        // 为了方便观察，不让 update 内部无止境的打印下去
+        if (updateCount &lt; 3){
+            updateCount ++;
+            CCLog("update index: %d", updateCount);
+
+            // 在不同的帧做相关操作，以便观察
+            if (updateCount == 1){
+                layer = LSLayer::create();
+                this-&gt;addChild(layer);
+                sprite = LSSprite::create();
+
+            } else if (updateCount == 2){
+                this-&gt;removeChild(layer, true);
+
+            } else if (updateCount == 3){
+
+            }
+
+            CCLog("update index: %d end", updateCount);
+        }
+    };
+
+    CREATE_FUNC(BaseLayer2);
+
+    BaseLayer2():
+        updateCount(0),
+        layer(NULL),
+        sprite(NULL)
+    {
+        CCLog("BaseLayer2().()");
+    };
+    ~BaseLayer2(){
+        CCLog("BaseLayer2().~()");
+    };
+};
+
+// 打印如下
+cocos2d-x debug info [BaseLayer2().()]
+cocos2d-x debug info [BaseLayer2().init()]
+// 第一帧创建两个对象
+cocos2d-x debug info [update index: 1]
+cocos2d-x debug info [LSLayer().()]
+cocos2d-x debug info [LSLayer().init()]
+cocos2d-x debug info [LSSprite().()]
+cocos2d-x debug info [LSSprite().init()]
+cocos2d-x debug info [update index: 1 end]
+// 我们看到 sprite 无用对象在 第一帧和第二帧之间被释放
+cocos2d-x debug info [LSSprite().~()]
+cocos2d-x debug info [update index: 2]
+// 在第二帧移除管理对象，可以看到它是立即释放，在 index: 2 end 之前
+cocos2d-x debug info [LSLayer().~()]
+cocos2d-x debug info [update index: 2 end]
+cocos2d-x debug info [update index: 3]
+cocos2d-x debug info [update index: 3 end]
+</code></pre>
+
+<p>```</p>
+
+<p>与无用对象不同的是，管理对象在不用之时，立即释放，这决定着如果想在其它地方使用此对象，在“完全”不用之前，一定要有所作为。重写 update 方法如下：</p>
+
+<p>``` c++</p>
+
+<pre><code>virtual void update(float fDelta){
+    // 为了方便观察，不让 update 内部无止境的打印下去
+    if (updateCount &lt; 3){
+        updateCount ++;
+        CCLog("update index: %d", updateCount);
+
+        // 在不同的帧做相关操作，以便观察
+        if (updateCount == 1){
+            layer = LSLayer::create();
+            this-&gt;addChild(layer);
+            sprite = LSSprite::create();
+            CCLog("%d", layer);
+        } else if (updateCount == 2){
+            layer-&gt;retain();
+            this-&gt;removeChild(layer, true);
+            CCLog("%d", layer);
+        } else if (updateCount == 3){
+            layer-&gt;release();
+            if (layer){
+                CCLog("%d", layer);
+            }
+        }
+
+        CCLog("update index: %d end", updateCount);
+    }
+};
+
+/// 打印如下
+cocos2d-x debug info [update index: 1]
+cocos2d-x debug info [LSLayer().()]
+cocos2d-x debug info [LSLayer().init()]
+cocos2d-x debug info [LSSprite().()]
+cocos2d-x debug info [LSSprite().init()]
+cocos2d-x debug info [147867424]
+cocos2d-x debug info [update index: 1 end]
+cocos2d-x debug info [LSSprite().~()]
+cocos2d-x debug info [update index: 2]
+// 第二帧并没有释放 layer，因为它还是有用的管理对象
+cocos2d-x debug info [147867424]
+cocos2d-x debug info [update index: 2 end]
+cocos2d-x debug info [update index: 3]
+// 完全弃用，立即释放  
+cocos2d-x debug info [LSLayer().~()]
+// 但是 layer 对象的地址还是可用的
+cocos2d-x debug info [147867424]
+cocos2d-x debug info [update index: 3 end]
+</code></pre>
+
+<p>```</p>
+
+<p><strong>在完全不用之前，要有所作为。</strong> 如果我们将第二帧中的 <code>layer-&gt;retain();</code> <strong>放在</strong>  <code>this-&gt;removeChild(layer, true);</code> <strong>之后</strong> 呢，我们知道在 removeChild 之后是立即释放的，此时 layer 对象已经不存在了，而 layer 所指向的内存地址是个无效地址。如果你的程序继续运行，那么一定会出现内存错误。</p>
+
+<p><strong>如果程序直接错误异常退出，倒也罢了，怕就怕，程序可能继续运行</strong>，layer 虽然是无效地址，但并不是 NULL，可能所指向的地址可用，可能还能继续执行，更可能的还能继续 <code>layer-&gt;retain();</code> 操作。这会影响我们的判断，程序真的有问题么。如果留下了这种隐患，那么排除错误的难度会大大加深。比如程序莫名其妙的退出，时好时坏！（经过一叶的测试，这种情况是可能发生的，而且频率相当高，测试平台：Linux 平台，Android平台可能性稍低）</p>
+
+<p>第三帧我们通过 <code>if (layer)</code> 判断对象是否可用，如果可用我们继续操作 layer ，这样的使用方式也将会留下内存隐患，因为这样的判断是能通过的，但却是 <strong>不一定</strong> 能够正确使用的。</p>
+
+<p>一般而言，我们不一定需要 <code>if(layer)</code> 诸如此类的判断，这也是不推荐的。管理对象，<strong>谁使用，那么谁就是可控的！</strong>如果在对象销毁之前 谁 retain() ，那么在 release() 之前，它无需判断即可使用。谁 <strong>addXXX</strong> 使用，一般能通过 <strong>getXXX</strong> 获取。</p>
+
+<p>简而言之，谁使用（引用），你就找谁就行了，不论是获取，或者移除。</p>
+
+<p>我们前面所言，管理对象不用之时，立即回收，那么我们在同一帧使用，然后移除呢？我们继续改写 update 方法，验证想法：</p>
+
+<p>``` c++</p>
+
+<pre><code>virtual void update(float fDelta){
+    // 为了方便观察，不让 update 内部无止境的打印下去
+    if (updateCount &lt; 3){
+        updateCount ++;
+        CCLog("update index: %d", updateCount);
+
+        // 在不同的帧做相关操作，以便观察
+        if (updateCount == 1){
+            layer = LSLayer::create();
+            this-&gt;addChild(layer);
+            this-&gt;removeChild(layer, true);
+        } else if (updateCount == 2){
+
+        } else if (updateCount == 3){
+
+        }
+
+        CCLog("update index: %d end", updateCount);
+    }
+};
+
+/// 其打印如下
+cocos2d-x debug info [update index: 1]
+cocos2d-x debug info [LSLayer().()]
+cocos2d-x debug info [LSLayer().init()]
+cocos2d-x debug info [update index: 1 end]
+// layer 在两帧之间释放，也既是在一下帧自动清理
+cocos2d-x debug info [LSLayer().~()]
+cocos2d-x debug info [update index: 2]
+cocos2d-x debug info [update index: 2 end]
+</code></pre>
+
+<p>```</p>
+
+<p>这里我们在同一帧 addChild 并且随之 removeChild，那么 layer 的性质又是如何，我们知道 <strong>管理对象</strong> 在不用之时会立即释放，但在这里并没有立即释放，那说明什么，说明 layer 并不是管理对象，还只是无用对象，并且在这一帧结束时，或者说在 <strong>帧过度</strong> 的时候，并没有使用，可想而知，在 帧过度的时候，其内部做了些处理，首先自动清理无用对象，或者将以使用的无用对象变成管理对象，而在以后的帧，如果在管理对象不用之时，将会立即释放。</p>
+
+<p>现在来看一看稍微复杂点的结构会如何。</p>
+
+<p>``` c++</p>
+
+<pre><code>// 在不同的帧做相关操作，以便观察
+if (updateCount == 1){
+    layer = LSLayer::create();
+    sprite = LSSprite::create();
+    layer-&gt;addChild(sprite);
+    addChild(layer);
+} else if (updateCount == 2){
+
+    this-&gt;removeChild(layer, true);
+} else if (updateCount == 3){
+
+}
+
+/// 打印如下
+cocos2d-x debug info [update index: 2]
+cocos2d-x debug info [LSLayer().~()]
+cocos2d-x debug info [LSSprite().~()]
+cocos2d-x debug info [update index: 2 end]
+</code></pre>
+
+<p>```</p>
+
+<p>我们创建了两个对象 layer 和 sprite，将 sprite 添加到 layer，并把通过 addChild(layer) 使用 layer，可以看到，在第二帧移除 layer 的时候，立即释放了 layer 和 sprite 对象。这也是 cocos2d-x 自动管理所实现的功能，<strong>在 使用者 不用的时候，它也将会解除对其它对象的使用。</strong></p>
+
+<p>基于以上情况，做些变形：</p>
+
+<p>``` c++</p>
+
+<pre><code>// 在不同的帧做相关操作，以便观察
+if (updateCount == 1){
+    layer = LSLayer::create();
+    sprite = LSSprite::create();
+    layer-&gt;addChild(sprite);
+} else if (updateCount == 2){
+    this-&gt;removeChild(layer, true);
+} else if (updateCount == 3){
+
+}
+
+/// 打印如下
+cocos2d-x debug info [update index: 1 end]
+cocos2d-x debug info [LSLayer().~()]
+cocos2d-x debug info [LSSprite().~()]
+cocos2d-x debug info [update index: 2]
+cocos2d-x debug info [update index: 2 end]
+</code></pre>
+
+<p>```</p>
+
+<p>创建了两个对象 layer 和 sprite，将 sprite 添加到 layer 之中，而对 layer 不做处理，我们知道 layer 在第一帧结束后，会自动释放，所以也会释放其所引用的 sprite，而此时 sprite 的性质就有点微妙了。它在帧过度之间是怎么处理的，它是不是我们这所说的无用对象呢？哈！如果 layer 首先被自动管理，那么它会首先回收，并取消对 sprite 的引用，那么 sprite 就是个无用对象，<strong>被自动回收</strong>。如果 sprite 首先被自动管理，那么它将会先变成一个管理对象，然后在 layer 自动释放并取消对 sprite 引用的时候，<strong>被立即释放</strong>。从效果上来说，都是一帧之内完成的。但具体是哪种情况呢？我不知晓 : p 也不用知晓 ~ 所谓不知为不知，是知也 ～</p>
+
+<h2>写在后面</h2>
+
+<p>自动管理，所谓自动管理就是通过 <code>create()</code> 方法创建的对象（当然其内部是通过 autorelease() 方法标示，create 只是提供一个统一的创建对象方式），而什么又是有用无用呢，文中我们看到 <code>retain()</code> 和 <code>release()</code>，而这就是有用无用的实现原理，使用就 retain ，移除使用就用 release，再细究内部，可知里面维护了一个引用计数，从而判断是否被使用 ，而前文我们知道 layer->addChild(obj)，那么 obj 就为 layer 所用，究其本质，也是其内部调用了其 retain 等方法，可以阅读官方相关文档，有详细的说明，而本文多是以抽象的概念解说其设计理念，从使用者的角度分析在使用过程中可能会出现的问题，因为要想达到相同的自动管理效果，实现方式可以有很多种。别太注重细节，如果有什么疑问，可以像这样，通过几个小例程去验证我们的想法。对于本文，也只是我对 cocos2d-x 自动管理的理解，如果在实现和概念上有什么说的不对，还请指出，毕竟是 <strong>浅说</strong> ～</p>
+
+<p>cocos2d-x 主要以 CCNode 为基类的树形结构组织管理，所以本文所创建的例程，基于 CCNode 编写，当然内存的自动管理还有很多内容，比如缓存的实现，消息机制对象的生命周期等。但基于谁使用，谁处理的原则，思路倒也明晰 ~</p>
+]]></content>
+  </entry>
+  
+</feed>

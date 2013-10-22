@@ -1,0 +1,405 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Linux 下开发 Android Cocos2d-x 游戏 - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="开发 Android 应用的首选 IDE 是什么，是 Eclipse ，而开发 Android 平台的 cocos2d-x 游戏呢，当然也是 Eclipse 。 Eclipse Android 开发环境搭建 如果你的 Eclipse 不支持 Java 开发，请安装相关插件，或者使用 Eclipse &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/04-22.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Linux 下开发 Android Cocos2d-x 游戏</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-22T22:15:00+08:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>开发 Android 应用的首选 IDE 是什么，是 Eclipse ，而开发 Android 平台的 cocos2d-x 游戏呢，当然也是 Eclipse 。</p>
+
+<h2>Eclipse Android 开发环境搭建</h2>
+
+<ul>
+<li>如果你的 Eclipse 不支持 Java 开发，请安装相关插件，或者使用 <a href="http://www.eclipse.org/downloads/">Eclipse IDE for Java Developers</a> 版本集成的 Java 开发环境。</li>
+<li>仅仅 Java 开发环境还不够，我们还需要 <a href="http://developer.android.com/tools/sdk/eclipse-adt.html">ADT</a>(Android Development Tools) ，顾名思义，通过它，我们才能在 Eclipse 建立 Android 项目，与 Eclipse 集成，打包生成 Android 应用程序包 Apk 文件。</li>
+<li>作为 ADT 的依赖环境，<a href="http://developer.android.com/sdk/index.html">Android SDK</a> 也是必须的。</li>
+<li>由于 cocos2d-x 是由 C/C++ 编写，为了编译 Android 平台 C/C++ 程序，我们还需要安装 <a href="http://developer.android.com/tools/sdk/ndk/index.html#Downloads">NDK</a>， 注意选择  Linux 版本， 32 位或者 64 位视开发机而定。</li>
+</ul>
+
+
+<!-- more -->
+
+
+<p>安装好 Eclipse、ADT 和 Android SDK、NDK，打开 Eclipse 做些简单的配置，打开 Eclipse:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>Eclipse -&gt; Window -&gt; Preferences -&gt; Android
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<ul>
+<li>在右侧设置 <strong>SDK Location</strong> 为你的 Android SDK 位置。只有当位置正确，才能正确点击 OK。</li>
+<li>Linux 下进入 Android SDK 目录，运行 <code>[android-sdk-linux]/tools/android</code> ，程序，安装相关工具，各种版本的 Android SDK Platform，代码实例等，可以选择 4.1.2 版本。</li>
+<li>Eclipse 切换到 Java Perspective (Eclipse 右上角设置)，点击 Eclipse 菜单 <code>Window -&gt; Android Virtual Device Manager</code> 创建一个虚拟机，版本对应上一步骤所安装的 SDK 版本。</li>
+<li>为了方便起见，我们将 Android SDK 和 NDK 的执行命令等（<code>[android-sdk-linux/tools] 和 ndk-build</code>），添加到 Linux 系统 PATH 环境变量。</li>
+</ul>
+
+
+<p>此时，通过安装配置，要能<strong>完成在 Linux 下使用 Eclipse 开发 Android 应用和 Android Jni 应用</strong>，我们才能继续接下来的过程，如果配置出现问题，不能开发 Android 或者 Jni 应用，那么请先解决之 ~</p>
+
+<p>环境搭建过程，如果出现什么问题或者疑问，可以 <a href="http://www.google.com">Google</a> 之，或者在博客之后留言交流 ~</p>
+
+<h2>创建 Linux Cocos2d-x for Android 项目</h2>
+
+<p>我们首先通过 cocos2d-x 自带的创建脚本创建 Android cocos2d-x 项目。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd</span> <span class="o">[</span>cocos2d-x-path<span class="o">]</span>
+</span><span class='line'>./create-android-project.sh <span class="c"># 回车</span>
+</span><span class='line'>...
+</span><span class='line'>Input package path. For example: org.cocos2dx.example
+</span><span class='line'>com.leafsoar.HelloWorld    <span class="c"># 输入包名</span>
+</span><span class='line'>...
+</span><span class='line'>...
+</span><span class='line'>----------
+</span><span class='line'>id: 7 or <span class="s2">&quot;android-16&quot;</span>
+</span><span class='line'>     Name: Android 4.1.2
+</span><span class='line'>     Type: Platform
+</span><span class='line'>     API level: 16
+</span><span class='line'>     Revision: 3
+</span><span class='line'>     Skins: QVGA, WVGA800 <span class="o">(</span>default<span class="o">)</span>, WSVGA, HVGA, WQVGA432, WVGA854, WQVGA400, WXGA720, WXGA800, WXGA800-7in
+</span><span class='line'>     ABIs : armeabi-v7a
+</span><span class='line'>input target id:
+</span><span class='line'>7    <span class="c"># 输入 target id，参照上面，根据自己的 sdk 版本选择</span>
+</span><span class='line'>...
+</span><span class='line'>input your project name:
+</span><span class='line'>HelloWorld            <span class="c"># 输入项目名称</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>会在 <code>[cocos2d-x-path]</code> 目录创建一个 <code>HelloWorld</code> 的目录，里面包含文件如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>HelloWorld/
+</span><span class='line'>├── Classes
+</span><span class='line'>│   ├── AppDelegate.cpp
+</span><span class='line'>│   ├── AppDelegate.h
+</span><span class='line'>│   ├── HelloWorldScene.cpp
+</span><span class='line'>│   └── HelloWorldScene.h
+</span><span class='line'>├── proj.android
+</span><span class='line'>│   ├── AndroidManifest.xml
+</span><span class='line'>│   ├── ant.properties
+</span><span class='line'>│   ├── bin
+</span><span class='line'>│   ├── build_native.sh
+</span><span class='line'>│   ├── build.xml
+</span><span class='line'>│   ├── jni
+</span><span class='line'>│   ├── libs
+</span><span class='line'>│   ├── local.properties
+</span><span class='line'>│   ├── ndkgdb.sh
+</span><span class='line'>│   ├── proguard-project.txt
+</span><span class='line'>│   ├── project.properties
+</span><span class='line'>│   ├── res
+</span><span class='line'>│   └── src
+</span><span class='line'>└── Resources
+</span><span class='line'>    ├── CloseNormal.png
+</span><span class='line'>    ├── CloseSelected.png
+</span><span class='line'>    └── HelloWorld.png
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p><a href="/archives/2013/04-19-11.html">上篇博文</a>我们简单分析了一下这样的目录组织方式，和其共用。创建好 cocos2d-x android 项目，我们开始编译，<code>proj.android</code>目录下提供一个自动编辑脚本，完成的工作是，编译 cocos2d-x C/C++ 程序，并且在 libs 目录生成相应的 <strong>so</strong> 库文件。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd</span> <span class="o">[</span>HelloWorld<span class="o">]</span>/proj.android
+</span><span class='line'>././build_native.sh
+</span><span class='line'>...
+</span><span class='line'>...
+</span><span class='line'>...
+</span><span class='line'>StaticLibrary  : libextension.a
+</span><span class='line'>SharedLibrary  : libgame.so
+</span><span class='line'>Install        : libgame.so <span class="o">=</span>&gt; libs/armeabi/libgame.so
+</span><span class='line'>make: Leaving directory <span class="s1">&#39;[cocos2dx-path]/HelloWorld/proj.android&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>看到如上信息，说明已经编译成功，首次编译过程稍微缓慢一点，如果没有出现以上结果，或者编译错误，多是因为系统环境没有配置正确。需要环境变量 <code>NDK_ROOT</code>、<code>COCOS2DX_ROOT</code>等，根据提示具体分析。</p>
+
+<h2>配置集成开发环境</h2>
+
+<p>为了方便项目管理，我们把 <code>HelloWorld</code> 目录移动到 Ecilpse 的工作空间之中，默认实在 [cocos2dx-path] 目录。然后使用 Eclipse 导入本地项目，指定 [HelloWorld/proj.android] 目录导入项目。</p>
+
+<ul>
+<li>导入之后我们发现项目出现感叹号，这是因为 Eclipse 管理此项目的依赖项目并不存在，我们继续用 Eclipse 导入 <code>[cocos2dx-path]/cocos2dx/platform/android/java</code> <strong>libcocos2dx</strong> 项目。</li>
+<li>我们右击 HelloWorld 修改项目属性，找到 Android  项，看到 Library 属性框，所引用的项目出现问题，首先 remove 然后 重新 Add 选择刚才添加的 libcocos2dx 项目。</li>
+<li>我们 clean 清空一下 HelloWorld  项目。</li>
+<li>此时在我的项目中 <strong>AndroidManifest.xml</strong> 文件出现 <code>androi:icon</code> 图标的错误，修改成 <code>@drawable/ic_launcher</code></li>
+<li>右击项目 <strong>Run as &ndash;> Android Application</strong> 就能运行此应用了</li>
+</ul>
+
+
+<p><strong>以上问题视自己的具体情况而定，可能出现不同的错误。</strong></p>
+
+<p>此时我们发现 Android 项目中，<strong>bin</strong> 目录生成了 HelloWorld.apk 文件，这个就是最终的 Android 平台 cocos2d-x 游戏安装包了。并且可以运行。</p>
+
+<p>至此，我们已经能够在 Linux 上运行编译运行 Android 平台的 cocos2d-x 游戏，但是每次我们在编写完 cocos2d-x 游戏源代码，我们都要执行 <code>build_native.sh</code> 命令，当然可以简化此步骤，并且将上一偏博文的的 Linux 下开发 Cocos2d-x 游戏，一遍编写调试，一边运行在 Android 平台，或者两个项目同时进行。这些内容将会在下一篇文章之中 ~</p>
+
+<p>至此还没有完，因为我们移动了项目目录，所以再次执行 <code>build_native.sh</code> 命令会出现问题，我们需要修改此文件中的配置：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">COCOS2DX_ROOT</span><span class="o">=</span><span class="s2">&quot;$DIR/../..&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>将此值设置为 [cocos2dx-path] 的绝对目录，或者使用 COCOS2DX_ROOT 的环境变量。以保证此命令能够执行编译成功。这个问题留给读者自己解决吧 : p</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-22T22:15:00+08:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/04-19.html" title="Previous Post: 善其事先利其器 Eclipse 开发 Cocos2d-x">&laquo; 善其事先利其器 Eclipse 开发 Cocos2d-x</a>
+      
+      
+        <a class="basic-alignment right" href="/archives/2013/04-23.html" title="Next Post: Eclipse 组织跨平台开发 Cocos2d-x 游戏">Eclipse 组织跨平台开发 Cocos2d-x 游戏 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

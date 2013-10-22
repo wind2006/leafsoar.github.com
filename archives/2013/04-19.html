@@ -1,0 +1,531 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>善其事先利其器 Eclipse 开发 Cocos2d-x - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="上篇博客，我们实现了在 Linux 下运行 cocos2d-x 游戏，这意味着我们可以在 Linux PC 机上进行游戏的编写、运行和调试，提高开发效率，而在手机上运行的过程大致分为： PC 上编写游戏源代码
+NDK 编译生成 so 库文件
+Android 工程打包生成 Apk 文件 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/04-19.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">善其事先利其器 Eclipse 开发 Cocos2d-x</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-19T11:20:00+08:00" pubdate data-updated="true">Apr 19<span>th</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="/archives/2013/04-17-17.html">上篇博客</a>，我们实现了在 Linux 下运行 cocos2d-x 游戏，这意味着我们可以在 Linux PC 机上进行游戏的编写、运行和调试，提高开发效率，而在手机上运行的过程大致分为：</p>
+
+<ul>
+<li>PC 上编写游戏源代码</li>
+<li>NDK 编译生成 so 库文件</li>
+<li>Android 工程打包生成 Apk 文件</li>
+<li>传输到模拟器或真机运行</li>
+</ul>
+
+
+<p>这么个手机上运行的过程繁琐非常，而且这只是运行在 Android 上的过程，如果通过 Android Jni 调用调试 C++ 更为麻烦，现今的 NDK 版本应该支持 Android Jni C++ 程序调试了。而在 PC 端开发运行和调试，<strong>偶尔</strong> 在手机上运行看看效果的开发过程，更为合适！虽然 cocos2d-x 是跨平台的，但常在目标平台运行，可以提前发现因平台特性可能出现的问题，并即时解决。</p>
+
+<!-- more -->
+
+
+<h2>Eclipse 上开发 Cocos2d-x  游戏</h2>
+
+<p>善其事先利其器，在做开发之前，搭建一个顺手的开发环境是必要的准备！</p>
+
+<h3>安装开发环境</h3>
+
+<p>在 Debian  系统下，可以直接通过 <code>sudo apt-get install eclipse</code> 安装开发环境，并自动安装依赖项，如 JDK 等。而这里是从官方网站下载最新版本。手动配置，可以选择一个自己熟悉的方式。</p>
+
+<ul>
+<li>这里使用的是 <a href="http://www.eclipse.org/downloads/"><strong>Eclipse Juno (4.2)</strong></a> 可以下载 <strong>IDE for Java</strong> 版本之后在安装 <strong>CDT</strong>，也可以直接下载 <strong>IDE for C/C++</strong> 版本的 Eclipse</li>
+<li>安装 <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html"><strong>JDK</strong></a> ，只需要 JAR 支持，就能运行 Eclipse 编写 C++ 了，为了以后编写 Java Android 程序，这里直接安装 JDK。</li>
+<li>下载之后配置环境变量，把 JDK bin 目录添加到 $PATH 环境变量。</li>
+</ul>
+
+
+<h3>第一个程序 <strong>HelloCpp</strong></h3>
+
+<p>现在的准备环境 Eclipse 和已经配置好的 CDT，并且能够运行普通 C++ 项目，而 cocos2d-x 的 Linux 也就是一个普通的 C++ 项目（ cocos2d-x 的跨平台特性）。我们先来看一下 cocos2d-x 是如何组织项目的，如下所示：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>HelloCpp/
+</span><span class='line'>├── Classes     <span class="c"># cocos2d-x 游戏源代码</span>
+</span><span class='line'>├── proj.android        <span class="c"># Android 平台项目目录组织</span>
+</span><span class='line'>├── proj.blackberry     <span class="c"># blackberry 项目组织</span>
+</span><span class='line'>├── proj.ios        <span class="c"># iOS 平台项目</span>
+</span><span class='line'>├── proj.linux      <span class="c"># Linux PC 项目，也是我们要用到的</span>
+</span><span class='line'>├── proj.mac        <span class="c"># Mac 项目</span>
+</span><span class='line'>├── proj.win32      <span class="c"># Windows VS 下 Win32项目</span>
+</span><span class='line'>└── Resources       <span class="c"># 游戏资源，包含图片、声音、字体等</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>在此处，我们只需要用到 <code>Classes</code>、<code>Resources</code> 和 <code>proj.linux</code> 就可以了，其中<code>proj.[平台]</code> 就是不同的开发平台，之后编译运行在不同平台的项目组织，而他们共用了源代码 <code>Classes</code> 和 <code>Resources</code> 资源文件。如果我们今后自己创建项目，最好也保持这样的组织方式！</p>
+
+<p>用 Eclipse 打开添加 HelloCpp 项目到：</p>
+
+<p>Eclipse &ndash;> File &ndash;> Import &ndash;> General &ndash;> Existing Projects into Workspace &ndash;> Browse 浏览目录，选中 <code>[cocos2dx-path]/samples/HelloCpp/proj.linux</code>， 点击 <strong>OK</strong> 之后 <strong>Finish</strong> ，我们就能在 Eclipse 看见被导入的项目了。</p>
+
+<p>现在我们试着运行 HelloCpp 项目，右击项目 <strong>Build Project</strong>（如果此项“灰显”不能点击的话，打开 Eclipse Problems 窗口，把 Errors 和 Warnings 都给删除即可），此时编译会编译不过去，提示如下错误信息：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>Description  Resource    Path    Location    Type
+</span><span class='line'>  cannot find -lcocosdenshion HelloCpp            C/C++ Problem
+</span><span class='line'>  cannot find -lcocos2d   HelloCpp            C/C++ Problem
+</span><span class='line'>  make: *** <span class="o">[</span>HelloCpp<span class="o">]</span> Error 1  HelloCpp            C/C++ Problem
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>在继续操作之前，我们先来了解一下 Eclipse 中 编写 C/C++ 程序的一般方式，作为编写程序来说，我们只要包含正确头文件的位置，就能够使用 CDT 带来的快捷，自动补全，而作为编译过程，这里有两种方式。<strong>其一： Eclipse 组织编译</strong> , Eclipse 之中设置很多参数，源代码路径，包含文件，包含的库文件等以系列信息，根据这些信息，它就能为我们自动生成 makefile 文件（具体见项目之下 <code>Debug</code> 目录），然后再根据这个文件自动编译，这样我们只需要写代码程序，不需要手动维护 Makefile 文件。<strong>其二：自定义 Makefile</strong>，如 HelloCpp 项目之中包含一 Makefile 文件，我们只要进入这个目录执行 <code>make</code> 命令，就能完成项目的编译，上篇博客就是使用这种方式，而在 Eclipse 自动调用 make 效果同样。</p>
+
+<p>而编写 <strong>cocos2d-x</strong> 游戏，这里我推荐第二种方式，有几点原因和优势。如果使用 Eclipse 自动生成的 makefile 编译方式，那么在编译当前项目之时，我们需要在 Eclipse 编译它的依赖项目，这会始事情变的复杂，其依赖项目有两个是必须的(如 [<code>[cocos2dx-path]/cocos2dx</code> 和 <code>[cocos2dx-path]/CocosDenshion</code>)，还有可选的(如<code>[cocos2dx-path]/external/Box2D</code> 物理引擎库)。还有优势，Eclipse 只作为项目组织编写，如果没有 Eclipse 环境，我们同样能够用 make 编译整个项目，所以维护好我们的 Makefile 可以省事很多。</p>
+
+<p>我们编译出现的错误，找不到库是因为 Eclipse 自动生成的 makefile 不知道从哪里去找库文件，当然我们可以把库项目添加到 Eclipse 之中，然后先把库项目编译成功，再来编译此项目，当然是完全可行的，但不推荐。</p>
+
+<p>知道原因后，我们做简单的修改</p>
+
+<h3>修改项目，编译运行</h3>
+
+<ul>
+<li>右击项目，查看属性 (Properties)</li>
+<li>选中 <code>C/C++ Build</code> 项，找到 <code>Makefile generation</code> 组合框之中的复选框 <code>Generate Makefiles automatically</code>，将 <strong>勾</strong> 去掉，以使用我们自己编写的 Makefile 编译。</li>
+<li>同样 <code>C/C++ Build</code> 项，找到标签 <code>Behaviour</code> 将 <code>Build (Incremental build)</code> 复选框之后的 变量值 <strong>all</strong> 删除，设置为空，否则编译项目会出现 <code>make: *** No rule to make target 'all'.  Stop.  HelloCpp</code> 的 错误</li>
+</ul>
+
+
+<p>此时我们在 <strong>Build Project</strong> 项目，就已经在 <code>bin</code> 目录生成可执行文件了。我们在项目右击 <code>Run as</code> &ndash;> <code>Local C/C++ Application</code> 但却运行不了，与 <a href="/archives/2013/04-17-17.html">上篇博客</a> 相比，虽然生成的方式略有不同，但本质一样，都是通过 <strong>Makefile</strong> 生成，由于配置原因，必须要在 <strong>当前目录之下才能运行</strong> 。这是因为 Makefile 之中默认配置的库路径问题所致。</p>
+
+<p>Makefile 使用的是 <strong>相对路径</strong> 引用库文件的，这也就是因为只有在 当前目录运行有效(工作目录在当前目录)，而在 Eclipse 之中运行无效的原因，Eclipse 的运行 <strong>工作目录</strong> 不是可执行程序的目录！！！</p>
+
+<p>不能运行，当然也就不能调试，我们还需要继续配置。</p>
+
+<h3>修改配置，集成开发环境并运行调试</h3>
+
+<p>现在开始到维护我们的 Makefile 文件了，修改 Makefile 之前，我们先定一个环境变量， <strong>$COCOS2DX_ROOT</strong> 以标示 cocos2dx的主目录。在 Eclipse 之中操作：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>Ecilpse -&gt; Windows -&gt; Preferences -&gt; C/C++ -&gt; Build -&gt; Environment
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>点击 <strong>Add</strong> ， <strong>Name</strong> 为 <strong>COCOS2DX_ROOT</strong>，<strong>Value</strong> 为 <strong>[cocos2dx-path]</strong></p>
+
+<p>(此处视你的环境而定，比如 <strong>&ldquo;[xxx/xxx/xxx]/cocos2d-2.0-x-2.0.4&rdquo;</strong>)</p>
+
+<p>然后修改我们的 Makefile 文件，把一些相对路径转换成基于环境变量的绝对路径，最终如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CC</span>      <span class="o">=</span> gcc
+</span><span class='line'><span class="nv">CXX</span>     <span class="o">=</span> g++
+</span><span class='line'><span class="nv">TARGET</span>    <span class="o">=</span> HelloCpp
+</span><span class='line'><span class="nv">CCFLAGS</span> <span class="o">=</span> -Wall
+</span><span class='line'><span class="nv">CXXFLAGS</span> <span class="o">=</span> -Wall
+</span><span class='line'><span class="nv">VISIBILITY</span> <span class="o">=</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">COCOS2DX_PATH</span> <span class="o">=</span> <span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/cocos2dx
+</span><span class='line'><span class="nv">INCLUDES</span> <span class="o">=</span>  -I../ <span class="se">\</span>
+</span><span class='line'>          -I../Classes <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span> <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform/third_party/linux <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform/third_party/linux/libfreetype2 <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/cocoa <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/include <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform/linux <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform/third_party/linux/glew-1.7.0/glew-1.7.0/include/ <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/kazmath/include <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform/third_party/linux/libxml2 <span class="se">\</span>
+</span><span class='line'>          -I<span class="k">$(</span>COCOS2DX_PATH<span class="k">)</span>/platform/third_party/linux/libjpeg  <span class="se">\</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nv">DEFINES</span> <span class="o">=</span> -DLINUX
+</span><span class='line'>
+</span><span class='line'><span class="nv">OBJECTS</span> <span class="o">=</span> ./main.o <span class="se">\</span>
+</span><span class='line'>        ../Classes/AppDelegate.o <span class="se">\</span>
+</span><span class='line'>        ../Classes/HelloWorldScene.o
+</span><span class='line'>
+</span><span class='line'><span class="nv">LBITS</span> <span class="o">:=</span> <span class="k">$(</span>shell getconf LONG_BIT<span class="k">)</span>
+</span><span class='line'><span class="cp">ifeq ($(LBITS),64)</span>
+</span><span class='line'><span class="nv">STATICLIBS_DIR</span> <span class="o">=</span> <span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/cocos2dx/platform/third_party/linux/libraries/lib64
+</span><span class='line'><span class="cp">else</span>
+</span><span class='line'><span class="nv">STATICLIBS_DIR</span> <span class="o">=</span> <span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/cocos2dx/platform/third_party/linux/libraries
+</span><span class='line'><span class="cp">endif</span>
+</span><span class='line'><span class="nv">STATICLIBS</span> <span class="o">=</span>
+</span><span class='line'><span class="nv">STATICLIBS</span> <span class="o">=</span> <span class="k">$(</span>STATICLIBS_DIR<span class="k">)</span>/libfreetype.a <span class="se">\</span>
+</span><span class='line'>              <span class="k">$(</span>STATICLIBS_DIR<span class="k">)</span>/libxml2.a <span class="se">\</span>
+</span><span class='line'>              <span class="k">$(</span>STATICLIBS_DIR<span class="k">)</span>/libpng.a <span class="se">\</span>
+</span><span class='line'>              <span class="k">$(</span>STATICLIBS_DIR<span class="k">)</span>/libjpeg.a <span class="se">\</span>
+</span><span class='line'>              <span class="k">$(</span>STATICLIBS_DIR<span class="k">)</span>/libtiff.a <span class="se">\</span>
+</span><span class='line'><span class="c">#             $(STATICLIBS_DIR)/libGLEW.a \</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">=</span>
+</span><span class='line'><span class="cp">ifeq ($(LBITS),64)</span>
+</span><span class='line'><span class="nv">SHAREDLIBS_DIR</span> <span class="o">=</span> <span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/CocosDenshion/third_party/fmod/lib64/api/lib
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">=</span> -L<span class="k">$(</span>SHAREDLIBS_DIR<span class="k">)</span> -lfmodex64
+</span><span class='line'><span class="cp">else</span>
+</span><span class='line'><span class="nv">SHAREDLIBS_DIR</span> <span class="o">=</span> <span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/CocosDenshion/third_party/fmod/api/lib
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">=</span> -L<span class="k">$(</span>SHAREDLIBS_DIR<span class="k">)</span> -lfmodex
+</span><span class='line'><span class="cp">endif</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">+=</span> -lglfw -lGL
+</span><span class='line'><span class="c">#SHAREDLIBS += -L../../../lib/linux/Debug -lcocos2d -lrt -lz -lcocosdenshion -Wl,-rpath,../../../../lib/linux/Debug/ </span>
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">+=</span> -Wl,-rpath,<span class="k">$(</span>SHAREDLIBS_DIR<span class="k">)</span>
+</span><span class='line'><span class="c">#SHAREDLIBS += -Wl,-rpath,../../../../cocos2dx/platform/third_party/linux/glew-1.7.0/glew-1.7.0/lib</span>
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">+=</span> -L<span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/cocos2dx/platform/third_party/linux/glew-1.7.0/glew-1.7.0/lib -lGLEW
+</span><span class='line'><span class="nv">SHAREDLIBS</span> <span class="o">+=</span> -Wl,-rpath,<span class="k">$(</span>COCOS2DX_ROOT<span class="k">)</span>/cocos2dx/platform/third_party/linux/glew-1.7.0/glew-1.7.0/lib
+</span><span class='line'>
+</span><span class='line'><span class="c">#$(shell ../../build-linux.sh $&lt;)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">BIN_DIR_ROOT</span><span class="o">=</span>bin
+</span><span class='line'><span class="nv">BIN_DIR</span> <span class="o">=</span> <span class="k">$(</span>BIN_DIR_ROOT<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">BIN_DIR = $(BIN_DIR_ROOT)/debug</span>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">CCFLAGS += -g3 -O0</span>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">CXXFLAGS += -g3 -O0</span>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">SHAREDLIBS += -L$(COCOS2DX_ROOT)/lib/linux/Debug -lcocos2d -lrt -lz -lcocosdenshion</span>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">SHAREDLIBS += -Wl</span><span class="p">,</span><span class="m">-rpath</span><span class="p">,</span><span class="m">$(COCOS2DX_ROOT)/lib/linux/Debug/</span>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">DEFINES += -DDEBUG</span>
+</span><span class='line'><span class="nf">debug</span><span class="o">:</span> <span class="m">$(TARGET)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">BIN_DIR = $(BIN_DIR_ROOT)/release</span>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">CCFLAGS += -O3</span>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">CXXFLAGS += -O3</span>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">SHAREDLIBS += -L$(COCOS2DX_ROOT)/lib/linux/Release -lcocos2d -lrt -lz -lcocosdenshion</span>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">SHAREDLIBS += -Wl</span><span class="p">,</span><span class="m">-rpath</span><span class="p">,</span><span class="m">$(COCOS2DX_ROOT)/lib/linux/Release/</span>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">DEFINES += -DNDEBUG</span>
+</span><span class='line'><span class="nf">release</span><span class="o">:</span> <span class="m">$(TARGET)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">####### Build rules</span>
+</span><span class='line'><span class="k">$(</span>TARGET<span class="k">)</span>: <span class="k">$(</span>OBJECTS<span class="k">)</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>BIN_DIR<span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CXX<span class="k">)</span> <span class="k">$(</span>CXXFLAGS<span class="k">)</span> <span class="k">$(</span>INCLUDES<span class="k">)</span> <span class="k">$(</span>DEFINES<span class="k">)</span> <span class="k">$(</span>OBJECTS<span class="k">)</span> -o <span class="k">$(</span>BIN_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span> <span class="k">$(</span>SHAREDLIBS<span class="k">)</span> <span class="k">$(</span>STATICLIBS<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">####### Compile</span>
+</span><span class='line'>%.o: %.cpp
+</span><span class='line'>  <span class="k">$(</span>CXX<span class="k">)</span> <span class="k">$(</span>CXXFLAGS<span class="k">)</span> <span class="k">$(</span>INCLUDES<span class="k">)</span> <span class="k">$(</span>DEFINES<span class="k">)</span> <span class="k">$(</span>VISIBILITY<span class="k">)</span> -c <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'>%.o: %.c
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CCFLAGS<span class="k">)</span> <span class="k">$(</span>INCLUDES<span class="k">)</span> <span class="k">$(</span>DEFINES<span class="k">)</span> <span class="k">$(</span>VISIBILITY<span class="k">)</span> -c <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'>clean:
+</span><span class='line'>  rm -f <span class="k">$(</span>OBJECTS<span class="k">)</span> <span class="k">$(</span>TARGET<span class="k">)</span> core
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>需要注意 <strong>$(COCOS2DX_ROOT)</strong> 和 <strong>$(COCOS2DX_PATH)</strong>  的区别，前者是 cocos2d-x 总目录，后者是 cocos2d-x 其中基础库的目录。</p>
+
+<p>如果需要在命令行之内直接 <code>make</code> 编译，只要创建环境变量 <code>COCOS2DX_ROOT</code> 即可。</p>
+
+<p>修改之后，我们再次编译，运行，就能够在 Eclipse 之中运行游戏，看其效果，并且可以在代码之中设置断点，<strong>调试运行</strong> 。</p>
+
+<h3>稍作总结</h3>
+
+<p>在 Linux 下使用 Eclipse 开发 cocos2d-x 游戏的环境配置大致是这样的了，Eclipse 作为编写代码，自己使用 Makefile 来维护项目的编译的推荐的方式。这只是实现了基本的配置方法，实际问题远不止这些，比如 此环境是默认的，在 Eclipse 项目中引用的库文件路径还是 <strong>相对路径</strong>，如果移动到其它目录(项目肯定用我们自己的目录)，则破坏了 Eclipse 的开发环境。当然最终的编写是为了运行在手机之中，以后也会给出怎么编译到手机 Android 平台，并给出相应的推荐做法，以简化开发步骤！</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-19T11:20:00+08:00" pubdate data-updated="true">Apr 19<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/04-17.html" title="Previous Post: Linux 环境 Cocos2d-x开发">&laquo; Linux 环境 Cocos2d-x开发</a>
+      
+      
+        <a class="basic-alignment right" href="/archives/2013/04-22.html" title="Next Post: Linux 下开发 Android Cocos2d-x 游戏">Linux 下开发 Android Cocos2d-x 游戏 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

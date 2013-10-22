@@ -1,0 +1,868 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>深入理解 Cocos2d-x 内存管理 - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="如果 Cocos2d-x 内存管理浅说 做为初步认识，而 Cocos2d-x 内存管理的一种实现做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。知其然，知其所以然 ~或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/06-04.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">深入理解 Cocos2d-x 内存管理</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-04T10:50:00+08:00" pubdate data-updated="true">Jun 4<span>th</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
+
+<p>我觉得 <strong>最好的学习方式是以自己的语言组织，说与别人听 ～</strong> 这样对自己：更容易发现平时容易忽略的问题，对别人：或多或少也有所助益！以学习为目的，而别人的受益算是附带的效果，这样一个出发点 ~</p>
+
+<p>由浅入深，总览全局（或者由整体到局部）是我喜欢的出发点，或者思考角度，我不喜欢拘泥于细节的实现，因为那会加大考虑问题的复杂度，所以 <strong>把复杂的问题简单化，是必然的过程。</strong> 那么本文就说说 Cocos2d-x 的架构是如何设计以方便内存管理的。从理论到实践 ~(当然是从我看问题的角度 :P，读者如有异议，欢迎讨论！文本使用 cocos2d-x 2.0.4 解说。)</p>
+
+<!-- more -->
+
+
+<hr />
+
+<h2>引用计数的由来</h2>
+
+<p>cocos2d-x 的世界是基于 <strong>CCObject</strong> 类构建的，其中的每个元素：层、场景、精灵等都是一个个 CCObject 的对象。所以 <strong>内存管理的本质就是管理一个个 CCObject</strong>。作为一个 cocos2d 的 C++ 移植版本，在它之前有很多其它语言的 <strong>实现</strong>，从架构层次来说，这与语言的实现无关（比如 CCNode 的节点树形关系，其它语言也可以实现，如果是内存方便，C# 等更是无需考虑），但就从内存管理方面来说，参考了 OC （Objective-C） 的内存管理实现。</p>
+
+<p>一个简单的<strong>自动管理原则</strong>：<strong>CCObject 内部维护着一个引用计数，引用计数为 0 就自动释放 ～</strong>（如果么有直接做如 delete 之类的操作）。那么此时可以预见，<strong>管理内存的实质就是管理这些 &ldquo;引用计数&rdquo; </strong> 了！使用 retain 和 release 方法对引用计数进行操作！</p>
+
+<hr />
+
+<h2>为什么要有自动释放池 及其作用</h2>
+
+<p>我们知道 cocos2d-x 使用了自动释放池，自动管理对象，知其然！其所以然呢？<strong>为什么需要自动释放池</strong>，它在整个框架之中又起着什么样的作用！在了解这一点之前，我们需要 <strong>知道 CCObject 从创建之初，到最终销毁</strong>，经历了哪些过程。在此，一叶总结以下几点：</p>
+
+<ul>
+<li>刚创建的对象，而 <strong>为了保证在使用之前不会释放</strong>（至少让它存活一帧），所以<strong>自引用</strong>（也就是初始为1）</li>
+<li>为了确定是否 <strong>实际使用</strong>，所以需要在一个合适的时机，<strong>解除自身引用。</strong></li>
+<li>而这个何时的时机正是在<strong>帧过度之时。</strong></li>
+<li>帧过度之后的对象，<strong>用则用矣，不用则弃！</strong></li>
+<li>由于已经解除了自身引用，所以它的<strong>引用被使用者管理</strong>（一般而言，内部组成树形结构的链式反应，如 CCNode）。</li>
+<li>链式反应，也就是，如果释放一个对象，也会释放它所引用的对象。</li>
+</ul>
+
+
+<p>上面是一个对象的大致流程，我们将对象分为<strong>两个时期</strong>，一个是刚<strong>创建时期</strong>，自引用为 <strong>1</strong>（如果为 0 就会释放对象，这是基本原则，所以要大于 0） 的时期，另一个是<strong>使用时期</strong>。上面说到，为了保证创建时期的对象不被销毁，所以自引用(<strong>并没有实际的使用</strong>)初始化为 1，这就意味着我们需要一个合适的时机，来解除这样的自引用。</p>
+
+<p><strong>何时？</strong>在帧过度之时！(这样可保证当前帧能正确使用对象而没有被销毁。)<strong>怎么样释放？</strong>由于是自引用，我们并不能通过其它方式访问到它，所以就有了自动释放池，我们 <strong>变相的将“自引用”转化“自动释放池引用”，来标记一个 “创建时期的对象”</strong>。然后在帧过度之时，通过自动释放池管理，统一释放 “释放池引用”，也就意味着，去除了“自身引用”。<strong>帧过度之后的对象，才是真正的被使用者所管理。</strong> 下面我们用代码来解释上述过程。</p>
+
+<p>通常我们使用 <code>create();</code> 方法来创建一个自动管理的对象，而其内部实际操作如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 初始化一个对象</span>
+</span><span class='line'><span class="k">static</span> <span class="n">CCObject</span><span class="o">*</span> <span class="n">create</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// new CCObject 对象</span>
+</span><span class='line'>  <span class="n">CCObject</span> <span class="o">*</span><span class="n">pRet</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCObject</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">pRet</span> <span class="o">&amp;&amp;</span> <span class="n">pRet</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">())</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// 添加到自动释放池</span>
+</span><span class='line'>        <span class="n">pRet</span><span class="o">-&gt;</span><span class="n">autorelease</span><span class="p">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">pRet</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">delete</span> <span class="n">pRet</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">pRet</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 我们看到初始化的对象 自引用 m_uReference = 1</span>
+</span><span class='line'><span class="n">CCObject</span><span class="o">::</span><span class="n">CCObject</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="o">:</span><span class="n">m_uAutoReleaseCount</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="p">,</span><span class="n">m_uReference</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1">// when the object is created, the reference count of it is 1</span>
+</span><span class='line'><span class="p">,</span><span class="n">m_nLuaID</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">static</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">uObjectCount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">m_uID</span> <span class="o">=</span> <span class="o">++</span><span class="n">uObjectCount</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 标记为自动释放对象</span>
+</span><span class='line'><span class="n">CCObject</span><span class="o">*</span> <span class="n">CCObject</span><span class="o">::</span><span class="n">autorelease</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 添加到自动释放池</span>
+</span><span class='line'>    <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">sharedPoolManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addObject</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 继续跟踪</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">addObject</span><span class="p">(</span><span class="n">CCObject</span><span class="o">*</span> <span class="n">pObject</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">getCurReleasePool</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addObject</span><span class="p">(</span><span class="n">pObject</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 添加到自动释放池的实际操作</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCAutoreleasePool</span><span class="o">::</span><span class="n">addObject</span><span class="p">(</span><span class="n">CCObject</span><span class="o">*</span> <span class="n">pObject</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 内部是由一个 CCArray 维护自动释放对象，并且此操作 会使引用 + 1</span>
+</span><span class='line'>    <span class="n">m_pManagedObjectArray</span><span class="o">-&gt;</span><span class="n">addObject</span><span class="p">(</span><span class="n">pObject</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 由于初始化 引用为 1，上面又有操作，所以引用至少为 2 （可能还被其它所引用）</span>
+</span><span class='line'>    <span class="n">CCAssert</span><span class="p">(</span><span class="n">pObject</span><span class="o">-&gt;</span><span class="n">m_uReference</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;reference count should be greater than 1&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="o">++</span><span class="p">(</span><span class="n">pObject</span><span class="o">-&gt;</span><span class="n">m_uAutoReleaseCount</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// 变相的将自身引用转化为释放池引用，所以减 1</span>
+</span><span class='line'>    <span class="n">pObject</span><span class="o">-&gt;</span><span class="n">release</span><span class="p">();</span> <span class="c1">// no ref count, in this case autorelease pool added.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>上面便是通过 <code>create()</code> 方法创建对象的过程。文中说到，一个合适的时机，解除自身引用（也就是释放池引用），那这又是在何时进行的呢？程序的运行有一个主循环，控制着每一帧的操作，在每一帧画面画完之时会自动调用 <code>CCPoolManager::sharedPoolManager()-&gt;pop();</code> 方法 ( 具体可参见文章<a href="http://blog.leafsoar.com/archives/2013/05-05-23.html">Cocos2d-x 程序是如何开始运行与结束的</a> ，这里我们只要知道每一帧结束都会调用 pop() 方法)，来自动清理 <strong>创建时期</strong> 的引用。现在我们就来看看 <code>pop()</code> 的方法实现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">pop</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span> <span class="n">m_pCurReleasePool</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 当前释放池个数，pop 使用栈结构</span>
+</span><span class='line'>     <span class="kt">int</span> <span class="n">nCount</span> <span class="o">=</span> <span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">count</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// 释放池当中存放的都是 创建时期 对象，此时解除释放池引用</span>
+</span><span class='line'>    <span class="n">m_pCurReleasePool</span><span class="o">-&gt;</span><span class="n">clear</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 当前释放池，出栈，在这里可以看到判断 nCount 是否大于 1，文后将会对此做具体说明</span>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="n">nCount</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>        <span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">removeObjectAtIndex</span><span class="p">(</span><span class="n">nCount</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//         if(nCount &gt; 1)</span>
+</span><span class='line'><span class="c1">//         {</span>
+</span><span class='line'><span class="c1">//             m_pCurReleasePool = m_pReleasePoolStack-&gt;objectAtIndex(nCount - 2);</span>
+</span><span class='line'><span class="c1">//             return;</span>
+</span><span class='line'><span class="c1">//         }</span>
+</span><span class='line'>        <span class="n">m_pCurReleasePool</span> <span class="o">=</span> <span class="p">(</span><span class="n">CCAutoreleasePool</span><span class="o">*</span><span class="p">)</span><span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">objectAtIndex</span><span class="p">(</span><span class="n">nCount</span> <span class="o">-</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/*m_pCurReleasePool = NULL;*/</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 释放池引用清理工作</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCAutoreleasePool</span><span class="o">::</span><span class="n">clear</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 如果释放池存在 创建时期 的对象</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="n">m_pManagedObjectArray</span><span class="o">-&gt;</span><span class="n">count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="c1">//CCAutoreleasePool* pReleasePool;</span>
+</span><span class='line'><span class="cp">#ifdef _DEBUG</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">nIndex</span> <span class="o">=</span> <span class="n">m_pManagedObjectArray</span><span class="o">-&gt;</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">CCObject</span><span class="o">*</span> <span class="n">pObj</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">CCARRAY_FOREACH_REVERSE</span><span class="p">(</span><span class="n">m_pManagedObjectArray</span><span class="p">,</span> <span class="n">pObj</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">pObj</span><span class="p">)</span>
+</span><span class='line'>                <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="o">--</span><span class="p">(</span><span class="n">pObj</span><span class="o">-&gt;</span><span class="n">m_uAutoReleaseCount</span><span class="p">);</span>
+</span><span class='line'>            <span class="c1">//(*it)-&gt;release();</span>
+</span><span class='line'>            <span class="c1">//delete (*it);</span>
+</span><span class='line'><span class="cp">#ifdef _DEBUG</span>
+</span><span class='line'>            <span class="n">nIndex</span><span class="o">--</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="c1">// 移除释放池对创建时期对象的引用，从而使对象交由使用者全权管理</span>
+</span><span class='line'>        <span class="n">m_pManagedObjectArray</span><span class="o">-&gt;</span><span class="n">removeAllObjects</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p><strong>到这里，自动释放池的作用也就完成了！</strong> 可以说创建的对象在一帧 (<strong>但有特殊情况，下一段说明</strong>) 之后就完全脱离了 <strong>自动释放池的控制</strong>，自动释放池，对对象的管理也就在 <strong>创建时期起着作用</strong>！之后便交由使用者管理，释放。</p>
+
+<hr />
+
+<h2>对&#8221;释放池&#8221;的管理说明</h2>
+
+<p>我们知道了释放池管理着 <strong>创建时期</strong> 的对象，那么对于释放池本身是如何管理的？我们知道对于释放池，只需要有一个就已经能够满足我们的需求了，而在 cocos2d-x 的设计中，使用了集合管理 <strong>一堆</strong> 释放池。而在实际，它们又发挥了多大的用处？</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 释放池管理接口</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">CC_DLL</span> <span class="n">CCPoolManager</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 释放池对象集合</span>
+</span><span class='line'>    <span class="n">CCArray</span><span class="o">*</span>    <span class="n">m_pReleasePoolStack</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// 当前操作释放池</span>
+</span><span class='line'>    <span class="n">CCAutoreleasePool</span><span class="o">*</span>                    <span class="n">m_pCurReleasePool</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 获取当前释放池</span>
+</span><span class='line'>    <span class="n">CCAutoreleasePool</span><span class="o">*</span> <span class="n">getCurReleasePool</span><span class="p">();</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">CCPoolManager</span><span class="p">();</span>
+</span><span class='line'>    <span class="o">~</span><span class="n">CCPoolManager</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">finalize</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">push</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">pop</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">removeObject</span><span class="p">(</span><span class="n">CCObject</span><span class="o">*</span> <span class="n">pObject</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// 添加一个 创建时期 对象</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">addObject</span><span class="p">(</span><span class="n">CCObject</span><span class="o">*</span> <span class="n">pObject</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">static</span> <span class="n">CCPoolManager</span><span class="o">*</span> <span class="n">sharedPoolManager</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">static</span> <span class="kt">void</span> <span class="n">purgePoolManager</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">friend</span> <span class="k">class</span> <span class="nc">CCAutoreleasePool</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 我们从 addObject 开始看起，由上文可以 addObject 是由 CCObject 的 autorelease 自动调用的</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">addObject</span><span class="p">(</span><span class="n">CCObject</span><span class="o">*</span> <span class="n">pObject</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">getCurReleasePool</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addObject</span><span class="p">(</span><span class="n">pObject</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCAutoreleasePool</span><span class="o">*</span> <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">getCurReleasePool</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 如果当前释放池为空</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">m_pCurReleasePool</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// 添加一个</span>
+</span><span class='line'>        <span class="n">push</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">CCAssert</span><span class="p">(</span><span class="n">m_pCurReleasePool</span><span class="p">,</span> <span class="s">&quot;current auto release pool should not be null&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">m_pCurReleasePool</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">push</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">CCAutoreleasePool</span><span class="o">*</span> <span class="n">pPool</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCAutoreleasePool</span><span class="p">();</span>       <span class="c1">//ref = 1</span>
+</span><span class='line'>    <span class="n">m_pCurReleasePool</span> <span class="o">=</span> <span class="n">pPool</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// 像集合添加一个新的释放池</span>
+</span><span class='line'>    <span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">addObject</span><span class="p">(</span><span class="n">pPool</span><span class="p">);</span>                   <span class="c1">//ref = 2</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">pPool</span><span class="o">-&gt;</span><span class="n">release</span><span class="p">();</span>                                       <span class="c1">//ref = 1</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>从 addObject 开始分析，我们知道在 addObject 之前，会首先判断是否有当前的释放池，如果没有则创建，如果有，则直接使用，可想而知，在任何使用，任何情况，通过 addObject 只需要创建一个释放池便已经足够使用了。事实上也是如此。再来看 pop 方法。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">pop</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span> <span class="n">m_pCurReleasePool</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>     <span class="kt">int</span> <span class="n">nCount</span> <span class="o">=</span> <span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">count</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// 清楚对 创建对象 的引用</span>
+</span><span class='line'>    <span class="n">m_pCurReleasePool</span><span class="o">-&gt;</span><span class="n">clear</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 如果大于 1，这也保证着，在任何时候，总有一个释放池是可以使用的</span>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="n">nCount</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// 移除当前的释放池</span>
+</span><span class='line'>        <span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">removeObjectAtIndex</span><span class="p">(</span><span class="n">nCount</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//         if(nCount &gt; 1)</span>
+</span><span class='line'><span class="c1">//         {</span>
+</span><span class='line'><span class="c1">//             m_pCurReleasePool = m_pReleasePoolStack-&gt;objectAtIndex(nCount - 2);</span>
+</span><span class='line'><span class="c1">//             return;</span>
+</span><span class='line'><span class="c1">//         }</span>
+</span><span class='line'>      <span class="c1">// 将当前释放池设定为前一个释放池，也就是 “出栈”的操作</span>
+</span><span class='line'>        <span class="n">m_pCurReleasePool</span> <span class="o">=</span> <span class="p">(</span><span class="n">CCAutoreleasePool</span><span class="o">*</span><span class="p">)</span><span class="n">m_pReleasePoolStack</span><span class="o">-&gt;</span><span class="n">objectAtIndex</span><span class="p">(</span><span class="n">nCount</span> <span class="o">-</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/*m_pCurReleasePool = NULL;*/</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p><strong>看到这里</strong> 我就不解了！什么情况下才能用到多个释放池？按照设计的逻辑根本用不到。带着这个疑问，我在 <code>CCPoolManager::push()</code> 方法之内添加了一句话打印（修改源代码） <code>CCLog("这里要长长长的 **********");</code> ，然后重新编译源文件，运行程序，发现实际的使用中，push 只被调用了两次！我们知道，通过 addObject 可能会自动调用 <code>push()</code> 一次，但也仅有一次，所以一定是哪里手动调用了 <code>push()</code> 方法，才会出现这种情况，所以我继续翻看源代码，定位到了 <code>bool CCDirector::init(void)</code> 方法，在这里进行了游戏的全局初始化相关工作：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">bool</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CCLOG</span><span class="p">(</span><span class="s">&quot;cocos2d: %s&quot;</span><span class="p">,</span> <span class="n">cocos2dVersion</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="n">m_dOldAnimationInterval</span> <span class="o">=</span> <span class="n">m_dAnimationInterval</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">kDefaultFPS</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">m_pobScenesStack</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCArray</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">m_pobScenesStack</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>    <span class="n">m_fContentScaleFactor</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>    <span class="c1">// touchDispatcher</span>
+</span><span class='line'>    <span class="n">m_pTouchDispatcher</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCTouchDispatcher</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">m_pTouchDispatcher</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// KeypadDispatcher</span>
+</span><span class='line'>    <span class="n">m_pKeypadDispatcher</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCKeypadDispatcher</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Accelerometer</span>
+</span><span class='line'>    <span class="n">m_pAccelerometer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCAccelerometer</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// 这里手动调用了 push 方法，而在这之前的初始化过程中，间接的使用了 CCObject 的 autorelease，已经触发过一次 push 方法</span>
+</span><span class='line'>    <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">sharedPoolManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">push</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p><strong>所以我们便能够看到 push 方法被调用了两次</strong>，但其实如果我们把这里的手动调用放在方法的开始处，或者干脆就不使用 <code>CCPoolManager::sharedPoolManager()-&gt;push();</code> ，对程序也没任何影响，这样从头到尾，<strong>只创建了一个自动释放池，而这里多创建的一个并没有多大的用处。</strong> 或者用处不甚明显，因为多创建一个释放池是有其效果的，效果具体体现在哪里，那就是 <strong>可以使调用 push() 方法之前的对象，多存活一帧。</strong>，因为 pop 方法只对当前释放池做了 clear 释放。为了方便起见，我们使用 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 里面的方法观察每一帧的情况，看下面测试代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 关键代码如下</span>
+</span><span class='line'><span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;update index: %d&quot;</span><span class="p">,</span> <span class="n">updateCount</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 在不同的帧做相关操作，以便观察</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 创建一个自动管理对象</span>
+</span><span class='line'>  <span class="n">layer</span> <span class="o">=</span> <span class="n">LSLayer</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// 创建一个新的自动释放池</span>
+</span><span class='line'>  <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">sharedPoolManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">push</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// 再创建一个自动管理对象</span>
+</span><span class='line'>  <span class="n">sprite</span> <span class="o">=</span> <span class="n">LSSprite</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;update index: %d end&quot;</span><span class="p">,</span> <span class="n">updateCount</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">/// 打印代码如下</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">1</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 第一帧创建了两个自动管理对象</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LSLayer</span><span class="p">().()]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LSSprite</span><span class="p">().()]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">1</span> <span class="n">end</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 第一个过度帧只释放了 sprite 对象</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LSSprite</span><span class="p">().</span><span class="o">~</span><span class="p">()]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">2</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">2</span> <span class="n">end</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 第二个过度帧释放了 layer 对象</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LSLayer</span><span class="p">().</span><span class="o">~</span><span class="p">()]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">3</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">3</span> <span class="n">end</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>可以对比 sprite 和 layer 对象，两个对象被放在了不同的自动释放池之中。这就是 手动调用 <code>push()</code> 方法所能达到的效果，至于怎么利用这个特性，<strong>帮助我们完成特殊的功能？我想还是不用了</strong>，这会增加我们程序设计的 <strong>复杂度</strong>，在我看来，甚至想把，cocos2d-x 2.0.4 中那唯一一次调用的 <code>push()</code> 给删了，以保持简单（程序的第一次初始化“可能”会用到这个特性，不过目测是没有多大关系的了 : P），在这里只系统通过这个例子理解 自动释放池是怎样被管理的即可！</p>
+
+<p>从自动释放池管理 <strong>创建时期</strong> 对象，再到对释放池的管理，我们已经大概了解了一个对象的生命周期经历了哪些！ 下面简单说说 <strong>使用时期</strong> 的对象管理。</p>
+
+<hr />
+
+<h2>树形结构的链式反应</h2>
+
+<p>文中我们知道了，自动释放池的存在意义，在于对象 <strong>创建时期</strong> 的处理，而仅仅理解了自动释放池，对于我们使用 cocos2d-x 不够，远远不够！自动释放池只是解决对象初始化的问题，仅此而已，而要在整个使用过程中，相对的自动化管理，那么必须理解两个概念，<strong>树形结构</strong> 和 <strong>链式反应</strong> （链式反应，不错的说法，就像原子弹爆炸一样，一传十，十传百 ：P）</p>
+
+<p>我们当前运行这一个场景，场景初始化，添加了很多层，层里面有其它的层或者精灵，而这些都是 CCNode 节点，以场景为根，形成一个树形结构，场景初始化之后（一帧之后），这些节点将完全 <strong>依附</strong> (内部通过 retain) 在这个树形结构之上，全权交由树来管理，当我们 <strong>砍去一个树枝</strong>，或者将树 <strong>连根拔起</strong>，那么在它之上的“子节点”也会跟着去除(内部通过 release)，这便是链式反应。</p>
+
+<p><a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>，此文这种实现的本质既是 <strong>强化</strong>这种 <strong>链式反应</strong>，也是解决内存可能出错的一个解决方案。如下（前文片段，具体详见前文）：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 方式一：那么我们的使用过程</span>
+</span><span class='line'><span class="n">LUser</span><span class="o">*</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">LUser</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sSprite</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;a.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// 如果这里不 retain  则以后就用不到了</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sSprite</span><span class="o">-&gt;</span><span class="n">retain</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 方式二：使用方法</span>
+</span><span class='line'><span class="n">LUser</span><span class="o">*</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">LUser</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sUserName</span> <span class="o">=</span> <span class="s">&quot;一叶&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="c1">// 这里的 sprite 会随着 lu 的消亡而消亡，不用管释放问题了</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">setSprite</span><span class="p">(</span><span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;a.png&quot;</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>我们看到方式二相比方式一的设计，它通过 setSprite 内部对 sprite 本身 retain，从而实现<strong>链式反应</strong>，而不是直接使用 <code>lu-&gt;m_sSprite-&gt;retain();</code>，这样的好处是，我只要想着释放 LUser，而不用考虑LUser 内部 sprite 的引用情况就行了。如此才能把 cocos2d-x 内存的自动管理特性完全发挥 ~</p>
+
+<p>而要实现这样管理的一个明显特征就是，隐藏 <code>retain</code> 和 <code>release</code> 操作 ~</p>
+
+<hr />
+
+<h2>稍作总结</h2>
+
+<p>关于 cocos2d-x 的内存管理从使用到原理，系列文章就到这里了！（三篇也算系列 = =!） 由表象到内部的思考探索过程，其实在 <strong>浅说</strong> 当中对 cocos2d-x 的使用，便已经能够知晓内部细节设计之一二，透过现象看本质！三篇文章包含了，使用浅说（简单的测试），一种防止内存泄漏的设计（加强链式反应），最后纵览 cocos2d-x 的内存管理框架，对 CCObject 的生命周期做了简单的说明，当然其中还是隐藏一些细节的，比如管理都是用 CCArray 来管理，但我们并没有对 CCArray 做介绍，它是如何添加元素，如何引用等。在任何时候我们只针对一个问题进行思考，那我们该把 CCArray 这样的辅助工具类放在何处，如果你了解当然最好，不过不了解，那便 <strong>存疑</strong> ，然后对相应的问题，分而治之 ~</p>
+
+<p><strong>存疑</strong> 可以帮助一叶在某个时刻只针对某一个问题进行思考，从而使问题变的简单。对文中所涉及的到的两个类 <code>CCPoolManager</code> 和 <code>CCAutoreleasePool</code> 其中所有的方法并没有面面俱到，当然有了整体思路，去 <strong>填充那些</strong> 小疑问将会变得简单。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-04T10:50:00+08:00" pubdate data-updated="true">Jun 4<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/05-29.html" title="Previous Post: Cocos2d-x 内存管理的一种实现">&laquo; Cocos2d-x 内存管理的一种实现</a>
+      
+      
+        <a class="basic-alignment right" href="/archives/2013/07-27.html" title="Next Post: CCScrollView 实现帮助界面、关卡选择">CCScrollView 实现帮助界面、关卡选择 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

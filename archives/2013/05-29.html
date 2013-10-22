@@ -1,0 +1,727 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cocos2d-x 内存管理的一种实现 - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 复合机制 下，使得出现内存问题的概率直线飙升 ~ 而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d- &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/05-29.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cocos2d-x 内存管理的一种实现</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-29T10:10:00+08:00" pubdate data-updated="true">May 29<span>th</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
+
+<p>而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d-x ，或者说，缺少那么一种 <strong>规范</strong>，如果存在了这么一种 <strong>规范</strong>，而使得 Cocos2d-x 更为简单优雅，那势必是游戏的开发过程，更加从新所欲，把重点放在游戏本身的设计之上。</p>
+
+<h2>Retain 与 Release 乃万恶之源</h2>
+
+<p>稍微了解一点就能知道 Cocos2d-x 是基于引用计数来管理内存的，应用计数的加减就是 retain 和 release 方法的实现。在大多数情况下我们不用 <strong>显示</strong> 的去调用这两种方法，如在 <strong>CCNode</strong> 的 <strong>addChild</strong> 和 <strong>removeChild</strong> 方法，<strong>CCArray</strong> 的 <strong>addObject</strong> 和 <strong>removeObject</strong> 等这样成双成对的方法，对于这些的使用很简单，一叶上篇文章 <strong><a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a></strong> 从概念上简单的分析了内部对象的生命周期特点，在此 <strong>浅说</strong> 之中，我刻意的绕过了它的底层实现，并没有深究其原理，对引用计数等概念也只是几句话一带而过，重点放在使用者该关心什么，该注意什么。因为我觉得 <strong>引用计数是个坑，一个很大的坑 ~</strong></p>
+
+<!-- more -->
+
+
+<p>当我们想要长期 <strong>持有</strong> 某个对象的时候，我们会用到 retain 和 release 方法，而这种情况我们会经常遇到，如那些 <strong>非CCNode</strong> 类型，比如一个运行场景里面有一个 <strong>CCString</strong> （以CCString 为例，显然此刻你更愿意用 std::string）保存的场景名称，以便我们随时使用，那我们一个简单的做法就是在场景初始化的时候创建 CCString 对象，赋值，然后 retain，在场景结束或者析构函数中 release，这很简单，一个 retain 对应一个 release 就没有问题了，如果问题稍微变的复杂，在程序的运行中，我们可能会改变这个属性值，创建一个新的 CCString 去替换它，那在执行这些操作的时候我们需要很多判断，是否已经有值，首先要解除之前的引用，在重新引用新的对象~~<strong>诸如此类</strong>，如果中间不需要此对象，中间直接释放，那么我们会 <strong>非常华丽的看到在程序代码之中到处穿插着 retain 和 release 操作</strong>。而这些 retain 和 release 虽然成对出现，但不一定在同一个方法，<strong>这就演变成了，所在的不同方法也要成对的调用。</strong></p>
+
+<p><strong>你把青蛙放到冷水里，再慢慢地加热，青蛙感觉不到什么，直到最后被烫死。</strong> 使用 retain 和 release 就正如温水里的青蛙，刚开始到也没觉得什么，引用计数概念多好。而到后来，发现越来越难以控制，为时以晚矣～</p>
+
+<p>“如果说C语言给了你足够的绳子吊死自己，那么C++给的绳子除了够你上吊之外，还够绑上你所有的邻居，并提供一艘帆船所需的绳索。”（摘自 <strong>UNIX痛恨者手册</strong>） 而此时 ~~~</p>
+
+<h2>建立规范 完全消灭 retain 和 release</h2>
+
+<p>既然说 retain 和 release 乃万恶之源，那么我们只要 <strong>从源头上，解决这个问题</strong>，如此一切将会变的非常简单，我们将建立一种类似 addChild 这样的 <strong>内部处理</strong> 机制，不用显示的调用 retain 和 release ，从而杜绝了 retain “漫天飞”的可能。而要实现这样的机制，只需简单的设计即可 ~代码实现如下<a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/Learn/Classes/Property/Property.h">源码示例</a>：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 为了方便起见，自定义宏，并且为 varName 的实现加上了 __ls_ 的前缀，前缀可以修改，可以很长很长很长</span>
+</span><span class='line'><span class="c1">// 加 __ls_ 前缀是为了，在使用的过程只通过 set 和 get 属性包装器调用，而不要直接使用此属性</span>
+</span><span class='line'><span class="cp">#define LS_PRE(p) __ls_##p</span>
+</span><span class='line'><span class="c1">//#define LS_PRE(p) __retain_##p         // 其它前缀都行，目的是为了不让在直接使用此类型对象</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//   此处定义以弃用</span>
+</span><span class='line'><span class="c1">//   #define LS_PROPERTY_RETAIN(varType, varName, funName)\</span>
+</span><span class='line'><span class="c1">//   private: varType LS_PRE(varName);\</span>
+</span><span class='line'><span class="c1">//   public: void set##funName(varType value){\</span>
+</span><span class='line'><span class="c1">//       CC_SAFE_RELEASE_NULL(LS_PRE(varName));\</span>
+</span><span class='line'><span class="c1">//       LS_PRE(varName) = value;\</span>
+</span><span class='line'><span class="c1">//       CC_SAFE_RETAIN(LS_PRE(varName));\</span>
+</span><span class='line'><span class="c1">//   }; \</span>
+</span><span class='line'><span class="c1">//   public: varType get##funName(){return LS_PRE(varName);};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 经朋友提醒，发现 cocos2d-x 已经实现了相应功能的宏，并且更好用，那这里的二次包装就算是仅仅加个前缀吧 ！！！</span>
+</span><span class='line'><span class="cp">#define LS_PROPERTY_RETAIN(varType, varName, funName)\</span>
+</span><span class='line'><span class="cp"> CC_SYNTHESIZE_RETAIN(varType, LS_PRE(varName), funName);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 初始化和释放包装宏，主要为了封装前缀，始定义统一</span>
+</span><span class='line'><span class="cp">#define LS_P_INIT(p) LS_PRE(p)(0)</span>
+</span><span class='line'><span class="cp">#define LS_P_RELEASE(p) CC_SAFE_RELEASE_NULL(LS_PRE(p))</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * 自定义类型数据：用户信息</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">LUser</span><span class="o">:</span> <span class="k">public</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCObject</span><span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>  <span class="n">CREATE_FUNC</span><span class="p">(</span><span class="n">LUser</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">init</span><span class="p">(){</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="n">LUser</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;LUser()&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="o">~</span><span class="n">LUser</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;LUser().~():%s&quot;</span><span class="p">,</span> <span class="n">m_sUserName</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">m_sUserName</span><span class="p">;</span>     <span class="c1">// 用户名</span>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">m_sPassword</span><span class="p">;</span>     <span class="c1">// 用户密码</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">PropertyTest</span><span class="o">:</span> <span class="k">public</span> <span class="n">CCLayer</span><span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>  <span class="n">CREATE_FUNC</span><span class="p">(</span><span class="n">PropertyTest</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">init</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;PropertyTest().init()&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="n">LUser</span><span class="o">*</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">LUser</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>      <span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sUserName</span> <span class="o">=</span> <span class="s">&quot;leafsoar&quot;</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sPassword</span> <span class="o">=</span> <span class="s">&quot;123456&quot;</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">setLUser</span><span class="p">(</span><span class="n">lu</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// 为了方便在不同帧测试，启用定时器</span>
+</span><span class='line'>      <span class="k">this</span><span class="o">-&gt;</span><span class="n">scheduleUpdate</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">update</span><span class="p">(</span><span class="kt">float</span> <span class="n">fDelta</span><span class="p">){</span>
+</span><span class='line'>          <span class="c1">// 为了方便观察，不让 update 内部无止境的打印下去</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">){</span>
+</span><span class='line'>              <span class="n">updateCount</span> <span class="o">++</span><span class="p">;</span>
+</span><span class='line'>              <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;update index: %d&quot;</span><span class="p">,</span> <span class="n">updateCount</span><span class="p">);</span>
+</span><span class='line'>              <span class="c1">// 在不同的帧做相关操作，以便观察</span>
+</span><span class='line'>              <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">){</span>
+</span><span class='line'>                  <span class="c1">// 这里使用 getLUser 获取数据，而非 [__ls_]m_pLUser，所以我设置了前缀</span>
+</span><span class='line'>                  <span class="k">if</span> <span class="p">(</span><span class="n">getLUser</span><span class="p">())</span>
+</span><span class='line'>                      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;log lu: %s&quot;</span><span class="p">,</span> <span class="n">getLUser</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">m_sUserName</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">2</span><span class="p">){</span>
+</span><span class='line'>                  <span class="c1">// 重新赋值</span>
+</span><span class='line'>                  <span class="n">LUser</span><span class="o">*</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">LUser</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>                  <span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sUserName</span> <span class="o">=</span> <span class="s">&quot;一叶&quot;</span><span class="p">;</span>
+</span><span class='line'>                  <span class="n">setLUser</span><span class="p">(</span><span class="n">lu</span><span class="p">);</span>
+</span><span class='line'>              <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">3</span><span class="p">){</span>
+</span><span class='line'>                  <span class="k">if</span> <span class="p">(</span><span class="n">getLUser</span><span class="p">())</span>
+</span><span class='line'>                      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;log lu: %s&quot;</span><span class="p">,</span> <span class="n">getLUser</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">m_sUserName</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>              <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">updateCount</span> <span class="o">==</span> <span class="mi">4</span><span class="p">){</span>
+</span><span class='line'>                  <span class="c1">// 这里调用 seLUser(0),直接取消引用持有对象，如果不调用也没有关系</span>
+</span><span class='line'>                  <span class="c1">// 因为在当前类析构的时候会自动检测释放</span>
+</span><span class='line'>                  <span class="n">setLUser</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>              <span class="p">}</span>
+</span><span class='line'>              <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;update index: %d end&quot;</span><span class="p">,</span> <span class="n">updateCount</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>      <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 构造函数，初始化 LS_PROPERTY_RETAIN 属性为空</span>
+</span><span class='line'>  <span class="n">PropertyTest</span><span class="p">()</span><span class="o">:</span>
+</span><span class='line'>      <span class="n">LS_P_INIT</span><span class="p">(</span><span class="n">m_pLUser</span><span class="p">),</span>
+</span><span class='line'>      <span class="n">updateCount</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 析构函数释放</span>
+</span><span class='line'>  <span class="o">~</span><span class="n">PropertyTest</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">LS_P_RELEASE</span><span class="p">(</span><span class="n">m_pLUser</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 使用 LS_PROPERTY_RETAIN 宏定义的属性，必须在构造和析构函数中初始化和释放</span>
+</span><span class='line'>  <span class="c1">// 初始化为 0 或者 NULL，是为了在进行赋值操作前判断是否以有引用</span>
+</span><span class='line'>  <span class="c1">// 析构函数释放是为了解除对持有对象的引用，如果有的话</span>
+</span><span class='line'>  <span class="n">LS_PROPERTY_RETAIN</span><span class="p">(</span><span class="n">LUser</span><span class="o">*</span><span class="p">,</span> <span class="n">m_pLUser</span><span class="p">,</span> <span class="n">LUser</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>  <span class="kt">int</span> <span class="n">updateCount</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">/// 程序执行打印如下</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">PropertyTest</span><span class="p">().</span><span class="n">init</span><span class="p">()]</span>
+</span><span class='line'><span class="c1">// init 方法创建对象并通过 setLUser 持有对象</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LUser</span><span class="p">()]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">1</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 第一帧顺利访问 持有对象</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">log</span> <span class="nl">lu:</span> <span class="n">leafsoar</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">1</span> <span class="n">end</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">2</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 第二帧创建新的 用户信息</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LUser</span><span class="p">()]</span>
+</span><span class='line'><span class="c1">// 通过 setLUser 改变用户信息，这会使得之前设置的用户信息“自动”释放</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LUser</span><span class="p">().</span><span class="o">~</span><span class="p">()</span><span class="o">:</span><span class="n">leafsoar</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">2</span> <span class="n">end</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">3</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 跨帧继续访问新值</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">log</span> <span class="nl">lu:</span> <span class="err">一叶</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">3</span> <span class="n">end</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="c1">// 调用了 setLUser(0) 说明已经解除了之前持有对象的引用，如果有的话</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">LUser</span><span class="p">().</span><span class="o">~</span><span class="p">()</span><span class="o">:</span><span class="err">一叶</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">4</span> <span class="n">end</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">5</span><span class="p">]</span>
+</span><span class='line'><span class="n">cocos2d</span><span class="o">-</span><span class="n">x</span> <span class="n">debug</span> <span class="n">info</span> <span class="p">[</span><span class="n">update</span> <span class="nl">index:</span> <span class="mi">5</span> <span class="n">end</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>通过上面的例子，可以看到将 <strong>持有对象</strong> 的操作变的非常简单，<strong>只通过</strong> set 和 get 属性包装器存取数据，而并没有 <strong>显示</strong> 的调用 retain 和 release 方法来操作，最大程度的自动化管理引用计数问题，一切皆在掌控之中。从此，世界清净了 ~ <strong>你不用再为何时 retain 何处 release 而烦恼。</strong></p>
+
+<p>而要做到如上的使用方法，在定义之初需规范化设计，大致如下：</p>
+
+<ul>
+<li>通过 <strong>LS_PROPERTY_RETAIN</strong> 宏创建 <strong>可持有对象属性</strong>，并自动创建 set 和 get 属性包装器。宏的设计并非毫无来由，我们知道 cocos2d-x 内部定义了很多以 <strong>CC_</strong> 为前缀的宏，方便使用，比如 <strong>CC_PROPERTY[xxx]</strong> 此类。set 方法会自动的根据需要处理 retain 和 release。</li>
+<li>宿主类的构造函数必须初始化对象为 NULL 或者 0，这是 C++ 的特性使然。LS_P_INIT，简化了操作。</li>
+<li>宿主类的析构函数必须释放对象[如果有]，这样我们就不用 <strong>显示</strong> 的调用释放了。可以通过 LS_P_RELEASE 调用。</li>
+</ul>
+
+
+<h3>LS_PROPERTY_RETAIN 宏的实现</h3>
+
+<p>在上面的例程中，我们使用了 <strong>LS_PROPERTY_RETAIN(LUser*, m_pLUser, LUser);</strong> 定义一个属性，那么我们看这个宏做了哪些事情，我们展开这个宏看看：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">LS_PROPERTY_RETAIN</span><span class="p">(</span><span class="n">LUser</span><span class="o">*</span><span class="p">,</span> <span class="n">m_pLUser</span><span class="p">,</span> <span class="n">LUser</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// 展开如下</span>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>  <span class="c1">// 定义私有属性</span>
+</span><span class='line'>  <span class="n">LUser</span><span class="o">*</span> <span class="n">__ls_m_pLUser</span><span class="p">;</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>  <span class="c1">// 实现 set 方法</span>
+</span><span class='line'>  <span class="kt">void</span> <span class="n">setLUser</span><span class="p">(</span><span class="n">LUser</span><span class="o">*</span> <span class="n">var</span><span class="p">){</span>
+</span><span class='line'>      <span class="c1">// 首先释放当前的持有对象，没有则罢，如果有，那么就 release，因为如果有值，毕定是通过此方法设置并 retain 的</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">__ls_m_pLUser</span> <span class="o">!=</span> <span class="n">var</span><span class="p">){</span>
+</span><span class='line'>          <span class="c1">// 持有新的对象，这些都是 SAFE  安全操作的</span>
+</span><span class='line'>          <span class="n">CC_SAFE_RETAIN</span><span class="p">(</span><span class="n">var</span><span class="p">);</span>
+</span><span class='line'>          <span class="c1">// 这里是 cocos2d-x 提供的宏，就不展开了              </span>
+</span><span class='line'>          <span class="n">CC_SAFE_RELEASE</span><span class="p">(</span><span class="n">__ls_m_pLUser</span><span class="p">);</span>
+</span><span class='line'>          <span class="c1">// 设置新的属性</span>
+</span><span class='line'>          <span class="n">__ls_m_pLUser</span> <span class="o">=</span> <span class="n">var</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>  <span class="n">LUser</span><span class="o">*</span>  <span class="n">getLUser</span><span class="p">(){</span>
+</span><span class='line'>      <span class="c1">// 直接返回持有对象</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">__ls_m_pLUser</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>基本在设计之时，满足以上规范，就能想这里一样，通过 set 和 get 简单的对可持有对象进行任意的操作了。</p>
+
+<h2>应用</h2>
+
+<p>这样的设计使得 <strong>所有基于</strong> CCObject 的类型都能够方便的使用。那我们就能够很容易的持有 CCNode，层，精灵，CCArray，等数据了。而且不会看到漫天飞舞的 retain 和 release ~</p>
+
+<p>当然作用还不止如此，我们可能创建自己的类型继承 CCObject 以方便统一管理，在配合 CCArray ，使自定义的数据和 cocos2d-x <strong>无缝的集成</strong>。有些游戏需要处理很多数据，如网络传输接受的数据，自定义常用数据等 ~</p>
+
+<p>文中我们自定义了 LUser 是继承于 CCObject  的，这只是简单数据类型，复杂点的，LUser 中包含了其它 CCObject 的数据，如果按照以前的写法，设置之后就 retain ，那很难判断在哪里 release。如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">LUser</span><span class="o">:</span> <span class="k">public</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCObject</span><span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>  <span class="n">CREATE_FUNC</span><span class="p">(</span><span class="n">LUser</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">init</span><span class="p">(){</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="n">LUser</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;LUser()&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="o">~</span><span class="n">LUser</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;LUser().~():%s&quot;</span><span class="p">,</span> <span class="n">m_sUserName</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">m_sUserName</span><span class="p">;</span>     <span class="c1">// 用户名</span>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">m_sPassword</span><span class="p">;</span>     <span class="c1">// 用户密码</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 其它数据</span>
+</span><span class='line'>  <span class="n">CCSprite</span><span class="o">*</span> <span class="n">m_pSprite</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 那么我们的使用过程</span>
+</span><span class='line'><span class="n">LUser</span><span class="o">*</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">LUser</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sSprite</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;a.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// 如果这里不 retain  则以后就用不到了</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sSprite</span><span class="o">-&gt;</span><span class="n">retain</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>LUser 持有 m_sSprite 正如 文中 PropertyTest 持有 m_pLUser 一样，我们重新设计：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">LUser</span><span class="o">:</span> <span class="k">public</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCObject</span><span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>  <span class="n">CREATE_FUNC</span><span class="p">(</span><span class="n">LUser</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">init</span><span class="p">(){</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="n">LUser</span><span class="p">()</span><span class="o">:</span>
+</span><span class='line'>      <span class="n">LS_P_INIT</span><span class="p">(</span><span class="n">m_pSprite</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;LUser()&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="o">~</span><span class="n">LUser</span><span class="p">(){</span>
+</span><span class='line'>      <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;LUser().~():%s&quot;</span><span class="p">,</span> <span class="n">m_sUserName</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>      <span class="n">LS_P_RELEASE</span><span class="p">(</span><span class="n">m_pSprite</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">m_sUserName</span><span class="p">;</span>     <span class="c1">// 用户名</span>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">m_sPassword</span><span class="p">;</span>     <span class="c1">// 用户密码</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 其它数据</span>
+</span><span class='line'>  <span class="n">LS_PROPERTY_RETAIN</span><span class="p">(</span><span class="n">CCSprite</span><span class="o">*</span><span class="p">,</span> <span class="n">m_pSprite</span><span class="p">,</span> <span class="n">Sprite</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 使用方法</span>
+</span><span class='line'><span class="n">LUser</span><span class="o">*</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">LUser</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">m_sUserName</span> <span class="o">=</span> <span class="s">&quot;一叶&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="c1">// 这里的 sprite 会随着 lu 的消亡而消亡，不用管释放问题了</span>
+</span><span class='line'><span class="n">lu</span><span class="o">-&gt;</span><span class="n">setSprite</span><span class="p">(</span><span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;a.png&quot;</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>这样便将 m_pSprite 控制权，完全交给了 LUser 来处理了。基于这样的考虑，我们完全可以使用复杂的自定义类型，包含很多 CCObject 属性，而属性之中可能又包含其它 CCObject 的类型，而并不用担心释放问题，<strong>谁持有，谁管理，谁释放</strong>(而不会出现 lu->m_sSprite->retain(); 这样的情况)。这些数据可以在游戏中任意的传递，并且都是CCObject 类型的，并很好的结合 CCArray 管理。让自定义类型与 cocos2d-x 两者天衣无缝，配合无间 ~</p>
+
+<p>这里自定义的宏，加了个复杂的前缀，仅仅想提醒大家，只通过 set 和 get 来进行存取的操作，从而避免使用 retain 和 release 来管理，更简单的写法，使用 cocos2d-x 自带的宏即可：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">//  定义可以加 &quot;__&quot; 双下划，以告诉自己这是可持有属性</span>
+</span><span class='line'><span class="n">CC_SYNTHESIZE_RETAIN</span><span class="p">(</span><span class="n">LUser</span><span class="o">*</span><span class="p">,</span> <span class="n">__m_pLUser</span><span class="p">,</span> <span class="n">LUser</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 构造函数直接使用 __m_pLUser(0)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 析构函数调用如下</span>
+</span><span class='line'><span class="n">CC_SAFE_RELEASE_NULL</span><span class="p">(</span><span class="n">__m_pLUser</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 如此倒也省事，事省 : P</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h3>为什么 LUser 继承自 CCObject</h3>
+
+<p>如果不集成自 CCObject 而使用原来的 C++ 方式也并无不可，但 CCObject 的优势是很明显的，如果能够善于使用。如果你想在 cocos2d-x 一个CCNode绑定数据有 setUserObject() 方法，如果多个 LUser 那么可以用 CCArray 进行管理，如果你想使用通知功能 CCNotificationCenter，而此  LUser 是可被传递的，我们设置了 LUser 然后靠诉别人我更新了，发送一条通知，谁对这个通知感兴趣，那谁就自己处理去吧 ~ 如果 ~ 如果你对此文感兴趣，不妨一试 ~</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-29T10:10:00+08:00" pubdate data-updated="true">May 29<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/05-25.html" title="Previous Post: 多层 UI 触摸事件的轻量级设计">&laquo; 多层 UI 触摸事件的轻量级设计</a>
+      
+      
+        <a class="basic-alignment right" href="/archives/2013/06-04.html" title="Next Post: 深入理解 Cocos2d-x 内存管理">深入理解 Cocos2d-x 内存管理 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="Makefile Android.mk 引发的思索 在我们编写 Android 平台 cocos2d-x 游戏的时候，我们除了编写 Classes 之内的源代码文件之外，我们还需要维护其编译文件 Android.mk，如我们在 Classes 添加新的源文件，那么我们就要在 Android.mk &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/blog/page/2/index.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-24.html">Eclipse Cocos2d-x 开发自动管理</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-24T12:15:00+08:00" pubdate data-updated="true">Apr 24<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Makefile Android.mk 引发的思索</h2>
+
+<p>在我们编写 Android 平台 cocos2d-x 游戏的时候，我们除了编写 <code>Classes</code> 之内的源代码文件之外，我们还需要维护其编译文件 Android.mk，如我们在 Classes 添加新的源文件，那么我们就要在 Android.mk 配置添加其编译路径，如：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>LOCAL_SRC_FILES :<span class="o">=</span> hellocpp/main.cpp <span class="se">\</span>
+</span><span class='line'>                   ../../Classes/AppDelegate.cpp <span class="se">\</span>
+</span><span class='line'>                   ../../Classes/HelloWorldScene.cpp
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>每添加一个源文件，我们就要手动添加一个配置，始其能够被编译，同样的，在 proj.linux 的 Makefile 文件也有这样的情况：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">OBJECTS</span> <span class="o">=</span> ./main.o <span class="se">\</span>
+</span><span class='line'>        ../Classes/AppDelegate.o <span class="se">\</span>
+</span><span class='line'>        ../Classes/HelloWorldScene.o
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然让我们手动维护其配置，当然可以，不过麻烦非常，对于像我这样“懒惰”之人，当然需要想办法让其自动管理喽 ~</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-24.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-23.html">Eclipse 组织跨平台开发 Cocos2d-x 游戏</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-23T16:15:00+08:00" pubdate data-updated="true">Apr 23<span>rd</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>前面我们完成了，在 <a href="/archives/2013/04-17-17.html">Linux 上运行 cocos2d-x</a> 游戏，然后使用 <a href="/archives/2013/04-19-11.html">Eclipse 开发 Linux 平台 cocos2d-x</a> 游戏，最后完成了在 Linux 下使用 <a href="/archives/2013/04-22-22.html">Eclipse 开发 Android 平台的 cocos2d-x</a> 游戏。</p>
+
+<p>Ecilpse 开发 Linux 平台游戏使用的是 <code>proj.linux</code> 项目，Android 平台的使用的是 <code>proj.android</code> 项目，现在我们将所有项目整合，提供一个 Eclipse 完全开发 cocos2d-x 跨平台游戏的解决方案。我们将以上篇博文所建立的 Android 平台项目 <code>HelloWorld</code> 为基础，整合进 Linux 平台项目，并使用其作为开发调试的主要项目。</p>
+
+<h2>Eclipse 组织说明</h2>
+
+<p>使用 Eclipse 组织 cocos2d-x 项目，除了 Eclipse 所管理的 proj.linux 项目和 proj.android 项目，我们还需要一个项目，用户管理项目根目录，至于为何如此，后面将会说明，最终项目如下所示：</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-23.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-22.html">Linux 下开发 Android Cocos2d-x 游戏</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-22T22:15:00+08:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>开发 Android 应用的首选 IDE 是什么，是 Eclipse ，而开发 Android 平台的 cocos2d-x 游戏呢，当然也是 Eclipse 。</p>
+
+<h2>Eclipse Android 开发环境搭建</h2>
+
+<ul>
+<li>如果你的 Eclipse 不支持 Java 开发，请安装相关插件，或者使用 <a href="http://www.eclipse.org/downloads/">Eclipse IDE for Java Developers</a> 版本集成的 Java 开发环境。</li>
+<li>仅仅 Java 开发环境还不够，我们还需要 <a href="http://developer.android.com/tools/sdk/eclipse-adt.html">ADT</a>(Android Development Tools) ，顾名思义，通过它，我们才能在 Eclipse 建立 Android 项目，与 Eclipse 集成，打包生成 Android 应用程序包 Apk 文件。</li>
+<li>作为 ADT 的依赖环境，<a href="http://developer.android.com/sdk/index.html">Android SDK</a> 也是必须的。</li>
+<li>由于 cocos2d-x 是由 C/C++ 编写，为了编译 Android 平台 C/C++ 程序，我们还需要安装 <a href="http://developer.android.com/tools/sdk/ndk/index.html#Downloads">NDK</a>， 注意选择  Linux 版本， 32 位或者 64 位视开发机而定。</li>
+</ul>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-22.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-19.html">善其事先利其器 Eclipse 开发 Cocos2d-x</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-19T11:20:00+08:00" pubdate data-updated="true">Apr 19<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="/archives/2013/04-17-17.html">上篇博客</a>，我们实现了在 Linux 下运行 cocos2d-x 游戏，这意味着我们可以在 Linux PC 机上进行游戏的编写、运行和调试，提高开发效率，而在手机上运行的过程大致分为：</p>
+
+<ul>
+<li>PC 上编写游戏源代码</li>
+<li>NDK 编译生成 so 库文件</li>
+<li>Android 工程打包生成 Apk 文件</li>
+<li>传输到模拟器或真机运行</li>
+</ul>
+
+
+<p>这么个手机上运行的过程繁琐非常，而且这只是运行在 Android 上的过程，如果通过 Android Jni 调用调试 C++ 更为麻烦，现今的 NDK 版本应该支持 Android Jni C++ 程序调试了。而在 PC 端开发运行和调试，<strong>偶尔</strong> 在手机上运行看看效果的开发过程，更为合适！虽然 cocos2d-x 是跨平台的，但常在目标平台运行，可以提前发现因平台特性可能出现的问题，并即时解决。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-19.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-17.html">Linux 环境 Cocos2d-x开发</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-17T17:30:00+08:00" pubdate data-updated="true">Apr 17<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Cocos2d-x 跨平台特性分析</h2>
+
+<p>作为一款跨平台的 2D 游戏引擎 <a href="http://cocos2d-x.org/">Cocos2d-x</a> ，方便发布到各种移动平台，支持也在不断完善。可以跨平台运行，更据优势的是可以跨平台开发！</p>
+
+<p>作为运行平台来说，目前主要以 <strong>iOS</strong> 和 <strong>Android</strong> 平台为多，对其它平台也有支持，如 <strong>BlackBerry </strong>平台，但基本只要满足前两者，就能达到我们跨平台运行的目的，这是由用户量决定的。</p>
+
+<p>作为开发平台来说，常用的三种 <strong>IDE</strong>(集成开发环境) 开发方式：</p>
+
+<ul>
+<li><strong>Windows</strong> 系统下使用 <strong>Visual Stuido</strong> 开发</li>
+<li><strong>Mac</strong> 系统下使用 <strong>Xcode</strong> 开发</li>
+<li><strong>Linux</strong> 系统下使用 <strong>Eclipse + CDT</strong> 开发</li>
+</ul>
+
+
+<p>用过 Xcode 的人都说 Xcode 好用（ps:我没用过 :P），这是一套完整的开发环境，基于 <strong>llvm</strong> 的编译器，优秀的架构提供非常完善的工具链，先且不说，还有快速的模拟器，使开发过程流畅， Windows 平台的标准 IDE VS 也是易于使用，有 cocos2d-x 在 VS 中的项目模板，使开发简化了许多，并且直生成 Win32 可执行程序，即时看到运行效果。而使用 Eclipse 在 Linux 上开发 cocos2d-x 的人相对较少。并没有多少体会这样开发有什么优势！</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-17.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-16.html">初见</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T17:30:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+        
+          | 
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>无间落叶 无有入无间 ~</h2>
+
+<p><img src="/images/2013/leafsoar.jpg" title="物本清华 心若琉璃 亦如止水 亦如明镜 此时只道是寻常 ~" alt="leafsoar" /></p>
+
+<p><EMBED id=leafsoar src="http://dl.dropboxusercontent.com/u/54723974/leafsoar.mp3" width=327 height=50 type=audio/mpeg autostart="true" loop="true"></EMBED></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

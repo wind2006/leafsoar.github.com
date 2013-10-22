@@ -1,0 +1,1010 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cocos2d-x 程序是如何开始运行与结束的 - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力 问题的由来 怎么样使用 Cocos2d-x 快速开发游戏，方法很简单，你可以看看其自带的例程，或者从网上搜索教程，运行起第一个 Scene HelloWorldScene，然后在 HelloWorldScene &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/05-05.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cocos2d-x 程序是如何开始运行与结束的</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-05T23:30:00+08:00" pubdate data-updated="true">May 5<span>th</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><strong>题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力</strong></p>
+
+<h2>问题的由来</h2>
+
+<p>怎么样使用 Cocos2d-x 快速开发游戏，方法很简单，你可以看看其自带的例程，或者从网上搜索教程，运行起第一个 Scene <strong>HelloWorldScene</strong>，然后在 HelloWorldScene 里面写相关逻辑代码，添加我们的层、精灵等 ~ 我们并不一定需要知道 Cocos2d-x 是如何运行或者在各种平台之上运行，也不用知道 Cocos2d-x 的游戏是如何运行起来的，它又是如何渲染界面的 ~~~</p>
+
+<p>我们只用知道 Cocos2d-x 的程序是由 <strong>AppDelegate</strong> 的方法 <strong>applicationDidFinishLaunching</strong> 开始，在其中做些必要的初始化，并创建运行<strong>第一个 CCScene</strong> 即可，正如我们第一次使用各种编程语言写 <strong>Hello World!</strong> 的程序一样，如 Python 打印：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;Hello World!&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<!-- more -->
+
+
+<p>我们可以不用关心其是怎么实现的，我们只要知道这样就能打印一句话就够了，这就是 <strong>封装所带来的好处</strong> 。</p>
+
+<p>Cocos2d-x 自带的例程已经足够丰富，但是有些问题并不是看看例子，调用其方法就能明白的事情，在这里一叶遇到了如下问题：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// AppDelegate.cpp 文件</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">AppDelegate</span><span class="o">::</span><span class="n">AppDelegate</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;AppDelegate()&quot;</span><span class="p">);</span>       <span class="c1">// AppDelegate 构造函数打印</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">AppDelegate</span><span class="o">::~</span><span class="n">AppDelegate</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;AppDelegate().~()&quot;</span><span class="p">);</span>       <span class="c1">// AppDelegate 析构函数打印</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 程序入口</span>
+</span><span class='line'><span class="kt">bool</span> <span class="n">AppDelegate</span><span class="o">::</span><span class="n">applicationDidFinishLaunching</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// initialize director</span>
+</span><span class='line'>  <span class="n">CCDirector</span> <span class="o">*</span><span class="n">pDirector</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">();</span>
+</span><span class='line'>  <span class="n">pDirector</span><span class="o">-&gt;</span><span class="n">setOpenGLView</span><span class="p">(</span><span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 初始化，资源适配，屏幕适配，运行第一个场景等代码</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">AppDelegate</span><span class="o">::</span><span class="n">applicationDidEnterBackground</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">pause</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">AppDelegate</span><span class="o">::</span><span class="n">applicationWillEnterForeground</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">resume</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>此时我并不知道程序运行时，何时调用 AppDelegate 的构造函数，析构函数和程序入口函数，我们只要知道，程序在这里调用了其构造函数，然后进入入口函数执行其过程，最后再调用其析构函数即可。然而<strong>事与愿违</strong>，在实际执行的过程中，发现程序只调用其构造函数和入口函数，而直到程序结束运行，都 <strong>没有调用其析构函数</strong>。要验证此说法很简单，只要如上在析构函数中调用打印日志便可验证。</p>
+
+<p>发生这样的情况，让我 <strong>在构造函数创建[资源]，并且在析构函数中释放[资源]</strong> 的想法不能完成！！！ 我们<strong>知道它是从哪里开始运行，但却不知道它在哪里结束！</strong>疑问，唯有疑问！</p>
+
+<h2>两个入口</h2>
+
+<p>程序入口的概念是<strong>相对的</strong>，<strong>AppDelegate</strong> 作为跨平台程序入口，在这之上做了另一层的封装，封装了不同平台的不同实现，比如我们通常认为一个程序是由 <strong>main</strong> 函数开始运行，那我们就去找寻，我们看到了在 <strong>proj.linux</strong> 目录下存在 <strong>main.cpp</strong> 文件，这就是我们要看的内容，如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &quot;main.h&quot;</span>
+</span><span class='line'><span class="cp">#include &quot;../Classes/AppDelegate.h&quot;</span>
+</span><span class='line'><span class="cp">#include &quot;cocos2d.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">USING_NS_CC</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 500 is enough?</span>
+</span><span class='line'><span class="cp">#define MAXPATHLEN 500</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// get application path</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">length</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">fullpath</span><span class="p">[</span><span class="n">MAXPATHLEN</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">length</span> <span class="o">=</span> <span class="n">readlink</span><span class="p">(</span><span class="s">&quot;/proc/self/exe&quot;</span><span class="p">,</span> <span class="n">fullpath</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">fullpath</span><span class="p">));</span>
+</span><span class='line'>    <span class="n">fullpath</span><span class="p">[</span><span class="n">length</span><span class="p">]</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">resourcePath</span> <span class="o">=</span> <span class="n">fullpath</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">resourcePath</span> <span class="o">=</span> <span class="n">resourcePath</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">resourcePath</span><span class="p">.</span><span class="n">find_last_of</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">));</span>
+</span><span class='line'>    <span class="n">resourcePath</span> <span class="o">+=</span> <span class="s">&quot;/../../../Resources/&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// create the application instance</span>
+</span><span class='line'>    <span class="n">AppDelegate</span> <span class="n">app</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setResourceRootPath</span><span class="p">(</span><span class="n">resourcePath</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>    <span class="n">CCEGLView</span><span class="o">*</span> <span class="n">eglView</span> <span class="o">=</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">eglView</span><span class="o">-&gt;</span><span class="n">setFrameSize</span><span class="p">(</span><span class="mi">720</span><span class="p">,</span> <span class="mi">480</span><span class="p">);</span>
+</span><span class='line'><span class="c1">//    eglView-&gt;setFrameSize(480, 320);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>在这里我们看见了程序的<strong>真正</strong>入口，包含一个 main 函数，从此进入，执行 cocos2d-x 程序。</p>
+
+<p>我们看到 main 就知道其是入口函数，那么没有 main 函数就没有入口了吗？显然不是，以 Android 平台启动 cocos2d-x 程序为例。我们找到 Android 平台与上面 <strong>等价</strong> 的入口点，<code>proj.android/jni/hellocpp/main.cpp</code>：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &quot;cocos2d.h&quot;</span>
+</span><span class='line'><span class="cp">#include &quot;AppDelegate.h&quot;</span>
+</span><span class='line'><span class="cp">#include &quot;platform/android/jni/JniHelper.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;jni.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;android/log.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define  LOG_TAG    &quot;main&quot;</span>
+</span><span class='line'><span class="cp">#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">cocos2d</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">extern</span> <span class="s">&quot;C&quot;</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">jint</span> <span class="n">JNI_OnLoad</span><span class="p">(</span><span class="n">JavaVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">reserved</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">JniHelper</span><span class="o">::</span><span class="n">setJavaVM</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">JNI_VERSION_1_4</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeInit</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span>  <span class="n">env</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">thiz</span><span class="p">,</span> <span class="n">jint</span> <span class="n">w</span><span class="p">,</span> <span class="n">jint</span> <span class="n">h</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getOpenGLView</span><span class="p">())</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">CCEGLView</span> <span class="o">*</span><span class="n">view</span> <span class="o">=</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">view</span><span class="o">-&gt;</span><span class="n">setFrameSize</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">AppDelegate</span> <span class="o">*</span><span class="n">pAppDelegate</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AppDelegate</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">ccDrawInit</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">ccGLInvalidateStateCache</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">CCShaderCache</span><span class="o">::</span><span class="n">sharedShaderCache</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">reloadDefaultShaders</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">CCTextureCache</span><span class="o">::</span><span class="n">reloadAllTextures</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">CCNotificationCenter</span><span class="o">::</span><span class="n">sharedNotificationCenter</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">postNotification</span><span class="p">(</span><span class="n">EVNET_COME_TO_FOREGROUND</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setGLDefaultValues</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>我们并没有看到所谓的 main 函数，这是由于不同的平台封装所以有着不同的实现，在 Android 平台，默认是使用 Java 开发，可以使用 Java 通过 Jni 调用 C++ 程序，而这里也正式如此。我们暂且只需知道，由 Android 启动一个应用，通过各种<strong>峰回路转</strong>，最终执行到了 <code>Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeInit</code> 函数，由此，变开始了我们 cocos2d-x Android 平台的程序入口处。对于跨平台的 cocos2d-x 来说，除非必要，否则可不必深究其理，比如想要使用 Android 平台固有的特性等，那就需要更多的了解 Jni 使用方法，以及 Android 操作系统的更多细节。</p>
+
+<p>所以说程序的入口是相对的，正如博文开始的 <code>print('Hello World')</code> 一样，不同的语言，不同平台总有着不同的实现。</p>
+
+<p>这里我们参考了两个不同平台的实现， Linux 和 Android 平台 cocos2d-x 程序入口 main.cpp的实现，那么其它平台呢，如 iOS ,Win32 等 <del>~~ 殊途同归，其它平台程序的入口必然包含着其它平台的不同 <strong>封装实现</strong> ，知道有<strong>等价</strong>在此两平台的程序入口即可。而通过这两个平台也足够解决我们的疑问，<strong>程序的开始与结束</strong> </del></p>
+
+<h2>问题的推测</h2>
+
+<p>我们就从 Linux 和 Android 这两个平台的入口函数开始，看看 cocos2d-x 的执行流程到底为何？何以发生只执行了 AppDelegate 的构造函数，而没有析构函数。在查看 cocos2d-x 程序代码时，我们只关注 <strong>必要的</strong> 内容，何谓 必要，只要能解决我们此时的疑问即可！在两个平台的入口函数，我们看到如下内容：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// Linux 平台关键代码</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 初始化等内容</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="c1">// 创建 app 变量</span>
+</span><span class='line'>    <span class="n">AppDelegate</span> <span class="n">app</span><span class="p">;</span> 
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="c1">// 执行 核心 run() 方法</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Android 平台关键代码</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeInit</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span>  <span class="n">env</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">thiz</span><span class="p">,</span> <span class="n">jint</span> <span class="n">w</span><span class="p">,</span> <span class="n">jint</span> <span class="n">h</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getOpenGLView</span><span class="p">())</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">CCEGLView</span> <span class="o">*</span><span class="n">view</span> <span class="o">=</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">view</span><span class="o">-&gt;</span><span class="n">setFrameSize</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// 创建 AppDelegate 对象</span>
+</span><span class='line'>        <span class="n">AppDelegate</span> <span class="o">*</span><span class="n">pAppDelegate</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AppDelegate</span><span class="p">();</span>
+</span><span class='line'>      <span class="c1">// 执行 核心 run() 方法</span>
+</span><span class='line'>        <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="p">...</span>
+</span><span class='line'>      <span class="p">...</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>不同的平台，却实现相同操作，创建 <strong>AppDelegate</strong> 变量和执行 <strong>run</strong> 方法。下面将以 Linux 平台为例，来说明程序是如何开始与结束的，因为 Linux 的内部实现要简单一点，而 Android 平台的实现稍显麻烦，Jni 之间来回调用，对我们理解 cocos2d-x 的执行流程反而有所 <strong>阻碍</strong>，况且 cocos2d-x 本身就是跨平台的程序。不必拘泥于特有平台的专有特性。</p>
+
+<h2>程序的流程 （这里以 Linux 的实现为主，其它平台触类旁通即可）</h2>
+
+<h3>AppDelegate 与 CCApplication</h3>
+
+<p>我们从 <strong>main.cpp</strong> 中 <strong>CCApplication::sharedApplication()&ndash;>run();</strong> 这一句看起，这一句标志着， cocos2d-x 程序正式开始运行，一点点开始分析，我们定位到 <strong>sharedApplication()</strong> 方法的实现，这里只给出 <strong>必要</strong> 的代码，具体看一自己直接看源码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// [cocos2dx-path]/cocos2dx/platform/linux/CCApplication.cpp</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 此变量为定义了一个 CCApplication 的静态变量，也及时自己类型本身，实现单例模式</span>
+</span><span class='line'><span class="n">CCApplication</span> <span class="o">*</span> <span class="n">CCApplication</span><span class="o">::</span><span class="n">sm_pSharedApplication</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 构造函数，将所创建的 对象直接付给其静态变量</span>
+</span><span class='line'><span class="n">CCApplication</span><span class="o">::</span><span class="n">CCApplication</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 断言在此决定着此构造函数只能运行一次</span>
+</span><span class='line'>  <span class="n">CC_ASSERT</span><span class="p">(</span><span class="o">!</span> <span class="n">sm_pSharedApplication</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">sm_pSharedApplication</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCApplication</span><span class="o">::~</span><span class="n">CCApplication</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CC_ASSERT</span><span class="p">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">sm_pSharedApplication</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">sm_pSharedApplication</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">m_nAnimationInterval</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="o">/</span><span class="mf">60.0f</span><span class="o">*</span><span class="mf">1000.0f</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// run 方法，整个 cocos2d-x 的主循环在这里开始</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">CCApplication</span><span class="o">::</span><span class="n">run</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 首次启动调用初始化函数</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span> <span class="n">applicationDidFinishLaunching</span><span class="p">())</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 游戏主循环，这里 Linux 的实现相比其它平台的实现，简单明了</span>
+</span><span class='line'>  <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kt">long</span> <span class="n">iLastTime</span> <span class="o">=</span> <span class="n">getCurrentMillSecond</span><span class="p">();</span>
+</span><span class='line'>      <span class="c1">// 在循环之内调用每一帧的逻辑，组织并且控制 cocos2d-x 之中各个组件</span>
+</span><span class='line'>      <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">mainLoop</span><span class="p">();</span>
+</span><span class='line'>      <span class="kt">long</span> <span class="n">iCurTime</span> <span class="o">=</span> <span class="n">getCurrentMillSecond</span><span class="p">();</span>
+</span><span class='line'>      <span class="c1">// 这里的几个时间变量，可以控制每一帧所运行的 最小 时间，从而控制游戏的帧率</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">iCurTime</span><span class="o">-</span><span class="n">iLastTime</span><span class="o">&lt;</span><span class="n">m_nAnimationInterval</span><span class="p">){</span>
+</span><span class='line'>          <span class="n">usleep</span><span class="p">((</span><span class="n">m_nAnimationInterval</span> <span class="o">-</span> <span class="n">iCurTime</span><span class="o">+</span><span class="n">iLastTime</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// 注意，这里的 for 循环，并没有退出循环条件，这也决定着 run() 方法永远也不会返回</span>
+</span><span class='line'>  <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 方法直接返回了静态对象，并且做了断言，也既是在调用此方法之前，</span>
+</span><span class='line'><span class="c1">// 必须事先创建一个 CCApplication 的对象，以保证其静态变量能够初始化，否则返回空</span>
+</span><span class='line'><span class="n">CCApplication</span><span class="o">*</span> <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">CC_ASSERT</span><span class="p">(</span><span class="n">sm_pSharedApplication</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">sm_pSharedApplication</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>从上面的内容可以看出，从 <strong>sharedApplication()</strong> 方法，到 <strong>run()</strong> 方法，在这之前，我们需要调用到它的构造函数，否则不能运行，这就是为什么在 <strong>CCApplication::sharedApplication()&ndash;>run();</strong> 之前，我们首先使用了 <strong>AppDelegate app;</strong> 创建 AppDelegate 变量的原因！ 嗯 ！！ <strong>AppDelegate 和 CCAppliation 是什么关系！</strong> 由 AppDelegate 的定义我们可以知道，它是 CCApplication 的子类，在创建子类对象的时候，调用其构造函数的同时，父类构造函数也会执行，然后就将 AppDelegate 的对象赋给了 CCApplication 的静态变量，而在 AppDelegate 之中我们实现了 <strong>applicationDidFinishLaunching</strong> 方法，所以在 CCApplication 中 <strong>run</strong> 方法的开始处调用的就是 AppDelegate 之中的实现。而我们在此方法中我们初始化了一些变量，创建了第一个 CCScene 场景等，之后的控制权，便全权交给了 <strong>CCDirector::sharedDirector()&ndash;>mainLoop();</strong> 方法了。</p>
+
+<p>（这里的实现机制，不做详细说明，简单说来：<strong>applicationDidFinishLaunching</strong> 是由 CCApplicationProtocol 定义，CCApplication 继承， AppDelegate 实现的 ~）</p>
+
+<p><strong>比较重要的所在，for 循环并没有循环退出条件，所以 run 方法永远不会返回。那么是怎么结束的呢！要学会存疑！</strong></p>
+
+<h3>从 CCApplication 到 CCDirector</h3>
+
+<p>cocos2d-x 程序已经运行起来了，我们继续下一步，<strong>mainLoop</strong> 函数：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// [cocos2dx-path]/cocos2dx/CCDirector.cpp</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 定义静态变量，实现单例模式</span>
+</span><span class='line'><span class="k">static</span> <span class="n">CCDisplayLinkDirector</span> <span class="o">*</span><span class="n">s_SharedDirector</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="c1">// 返回 CCDirector 实例</span>
+</span><span class='line'><span class="n">CCDirector</span><span class="o">*</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 判断静态变量，以保证只有一个实例</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">s_SharedDirector</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">s_SharedDirector</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCDisplayLinkDirector</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">s_SharedDirector</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// CCDisplayLinkDirector 为 CCDirector 的子类，这里返回了其子类</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">s_SharedDirector</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// mainLoop 方法的具体实现</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCDisplayLinkDirector</span><span class="o">::</span><span class="n">mainLoop</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 此变量是我们需要关注，并且跟踪的，因为它决定着程序的结束时机</span>
+</span><span class='line'>   <span class="k">if</span> <span class="p">(</span><span class="n">m_bPurgeDirecotorInNextLoop</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>       <span class="n">m_bPurgeDirecotorInNextLoop</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'>     <span class="c1">// 运行到此，说明程序的运行，已经没有逻辑代码需要处理了</span>
+</span><span class='line'>       <span class="n">purgeDirector</span><span class="p">();</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>   <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span> <span class="n">m_bInvalid</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// 屏幕绘制，并做一些相应的逻辑处理，其内部处理，这里暂且不做过多探讨</span>
+</span><span class='line'>        <span class="n">drawScene</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// 这里实现了 cocos2d-x CCObject 对象的内存管理机制，对此有兴趣者，可以深入下去</span>
+</span><span class='line'>        <span class="n">CCPoolManager</span><span class="o">::</span><span class="n">sharedPoolManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">pop</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 弹出场景 CCScene</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">popScene</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">CCAssert</span><span class="p">(</span><span class="n">m_pRunningScene</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;running scene should not null&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">m_pobScenesStack</span><span class="o">-&gt;</span><span class="n">removeLastObject</span><span class="p">();</span>
+</span><span class='line'>    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">m_pobScenesStack</span><span class="o">-&gt;</span><span class="n">count</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// 如果没有场景，调用 end() 方法</span>
+</span><span class='line'>        <span class="n">end</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">m_bSendCleanupToScene</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">m_pNextScene</span> <span class="o">=</span> <span class="p">(</span><span class="n">CCScene</span><span class="o">*</span><span class="p">)</span><span class="n">m_pobScenesStack</span><span class="o">-&gt;</span><span class="n">objectAtIndex</span><span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">end</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 在 end 方法中，设置了变量为 true，这所致的结果，在 mainLoop 函数中，达成了运行 purgeDirector 方法的条件</span>
+</span><span class='line'>  <span class="n">m_bPurgeDirecotorInNextLoop</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 此方法做些收尾清理的工作</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">purgeDirector</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">m_pRunningScene</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">m_pRunningScene</span><span class="o">-&gt;</span><span class="n">onExit</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">m_pRunningScene</span><span class="o">-&gt;</span><span class="n">cleanup</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">m_pRunningScene</span><span class="o">-&gt;</span><span class="n">release</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// 做一些清理的工作</span>
+</span><span class='line'>   <span class="p">...</span>
+</span><span class='line'>    <span class="c1">// OpenGL view</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// ###此句代码关键###</span>
+</span><span class='line'>    <span class="n">m_pobOpenGLView</span><span class="o">-&gt;</span><span class="n">end</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">m_pobOpenGLView</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// delete CCDirector</span>
+</span><span class='line'>    <span class="n">release</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 设置 openglview</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">setOpenGLView</span><span class="p">(</span><span class="n">CCEGLView</span> <span class="o">*</span><span class="n">pobOpenGLView</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">CCAssert</span><span class="p">(</span><span class="n">pobOpenGLView</span><span class="p">,</span> <span class="s">&quot;opengl view should not be null&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">m_pobOpenGLView</span> <span class="o">!=</span> <span class="n">pobOpenGLView</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// EAGLView is not a CCObject</span>
+</span><span class='line'>        <span class="k">delete</span> <span class="n">m_pobOpenGLView</span><span class="p">;</span> <span class="c1">// [openGLView_ release]</span>
+</span><span class='line'>      <span class="c1">// 为当前 CCDirector m_pobOpenGLView  赋值</span>
+</span><span class='line'>        <span class="n">m_pobOpenGLView</span> <span class="o">=</span> <span class="n">pobOpenGLView</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// set size</span>
+</span><span class='line'>        <span class="n">m_obWinSizeInPoints</span> <span class="o">=</span> <span class="n">m_pobOpenGLView</span><span class="o">-&gt;</span><span class="n">getDesignResolutionSize</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">createStatsLabel</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">m_pobOpenGLView</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="n">setGLDefaultValues</span><span class="p">();</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">CHECK_GL_ERROR_DEBUG</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">m_pobOpenGLView</span><span class="o">-&gt;</span><span class="n">setTouchDelegate</span><span class="p">(</span><span class="n">m_pTouchDispatcher</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">m_pTouchDispatcher</span><span class="o">-&gt;</span><span class="n">setDispatchEvents</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>游戏的运行以场景为基础，每时每刻都有一个场景正在运行，其内部有一个场景栈，遵循后进后出的原则，当我们显示的调用 end() 方法，或者弹出当前场景之时，其自动判断，如果没有场景存在，也会触发 end() 方法，以说明场景运行的结束，而游戏如果没有场景，就像演出没有了舞台，程序进入最后收尾的工作，通过修改变量 <strong>m_bPurgeDirecotorInNextLoop</strong> 促使在程序 <strong>mainLoop</strong> 方法之内调用 <strong>purgeDirector</strong> 方法。</p>
+
+<h3>CCEGLView 的收尾工作</h3>
+
+<p>purgeDirector 方法之内，通过猜测与排查，最终定位到 <strong>m_pobOpenGLView->end();</strong> 方法，在这里结束了 cocos2d-x 游戏进程。而 m_pobOpenGLView 有时何时赋值，它的具体实现又在哪里呢？我们可以在 AppDelegate 的 <strong>applicationDidFinishLaunching</strong> 方法中找到如下代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// AppDelegate.cpp</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCDirector</span> <span class="o">*</span><span class="n">pDirector</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">();</span>
+</span><span class='line'><span class="n">pDirector</span><span class="o">-&gt;</span><span class="n">setOpenGLView</span><span class="p">(</span><span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">());</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>我们终于走到最后一步，看 CCEGLView 是如果负责收尾工作的:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// [cocos2dx-path]/cocos2dx/platform/linux.CCEGLView.cpp</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="n">CCEGLView</span><span class="o">*</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">CCEGLView</span><span class="o">*</span> <span class="n">s_pEglView</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">s_pEglView</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">s_pEglView</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CCEGLView</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">s_pEglView</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// openglview 结束方法</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">end</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="cm">/* Exits from GLFW */</span>
+</span><span class='line'>  <span class="n">glfwTerminate</span><span class="p">();</span>
+</span><span class='line'>  <span class="k">delete</span> <span class="k">this</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p><strong>end()</strong> 方法很简单，只需要看到最后一句 <strong>exit(0);</strong> 就明白了。</p>
+
+<h3>cocos2d-x 程序的结束流程</h3>
+
+<p>程序运行时期，由 <strong>mainLoop</strong> 方法维持运行着游戏之内的各个逻辑，当在弹出最后一个场景，或者直接调用 <strong>CCDirector::end();</strong> 方法后，触发游戏的清理工作，执行 <strong>purgeDirector</strong> 方法，从而结束了 CCEGLView（不同平台不同封装，PC使用OpenGl封装，移动终端封装的为 OpenGl ES） 的运行，调用其 <strong>end()</strong> 方法，从而直接执行 <strong>exit(0);</strong> 退出程序进程，从而结束了整个程序的运行。（Android 平台的 end() 方法内部通过Jni 方法 <strong>terminateProcessJNI();</strong> 调用 Java 实现的功能，其功能一样，直接结束了当前运行的进程）</p>
+
+<p>从程序的 main 方法开始，再创建 AppDelegate 等对象，运行过程中确实通过 exit(0); 来退出程序。所以我们看到了 AppDelegate 构造函数被调用，而其析构函数没有被调用的现象。</p>
+
+<p><strong>exit(0);</strong> 的执行，意味着我们的程序完全结束，当然我们的进程资源也会被操作系统释放。但是注意，这里的 <strong>在构造函数创建[资源]，并且在析构函数中释放[资源]</strong> 并非绝对意义上的程序进程资源，在程序退出的时候，程序所使用的资源当然会被系统回收，但是如果我在构造函数调用网络接口初始化，析构在调用一次通知，所影响到的类似这种的 <strong>非本地资源</strong> 逻辑上的处理，而留下隐患。而通过理解 cocos2d-x 的运行机制，可以减少这种可能存在的隐患。</p>
+
+<h2>cocos2d-x 的整体把握</h2>
+
+<p>在本文通过解决一个小疑问，而去分析 cocos2d-x 游戏的运行流程，当然其中很多细致末叶我们并没有深入下去。不去解决这个疑问也可以，知道没有调用析构函数，那我就不调用便是 （这也是简单的解决方法，也不用觉得这不可行 ）。这里只是借着这个疑问，对 cocos2d-x 的流程稍作探寻而已。也没有贴一堆 cocos2d-x 源码去分析，其思路也有迹可循。</p>
+
+<p>什么是 cocos2d-x ,它是 cocos2d 一个 C++ 的实现，除 C++ 之外，有 python ，Objective-C 等其它语言的实现，那该怎么去理解 cocos2d ，可以这么理解，cocos2d 是一个编写 2D 游戏的通用形框架，这种框架提供了一个通用模型，而这种模型或者说架构是 <strong>无关语言与平台</strong> 的，说 cocos2d-x 使用 C++ 编写，其跨平台能力很强，但它能跑在浏览器上么？cocos2d 还是有着 html5  的实现，当然平台决定着语言的选择，而 cocos2d 能够适应这么多不同的语言和平台，其良好的设计，清晰的结构功不可没。 而对不同语言，对相同功能有着不同的封装，正如在本文问题中，在不同平台（Linux 和 Android），对相同功能有着不同的封装异曲同工。那么封装到最后，我们对 cocos2d  的理解就只剩下了，我们要写游戏，那么需要导演，场景、层、精灵、动作等 <del>~ 组织好这个中之间的关系即可 </del></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-05T23:30:00+08:00" pubdate data-updated="true">May 5<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/04-24.html" title="Previous Post: Eclipse Cocos2d-x 开发自动管理">&laquo; Eclipse Cocos2d-x 开发自动管理</a>
+      
+      
+        <a class="basic-alignment right" href="/archives/2013/05-08.html" title="Next Post: 实现 Cocos2d-x 全局定时器">实现 Cocos2d-x 全局定时器 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

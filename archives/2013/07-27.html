@@ -1,0 +1,759 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>CCScrollView 实现帮助界面、关卡选择 - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/07-27.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">CCScrollView 实现帮助界面、关卡选择</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-27T17:30:00+08:00" pubdate data-updated="true">Jul 27<span>th</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。文章大致内容如下：</p>
+
+<ul>
+<li>首先实现了一个可拖动的界面，滚屏屏幕，它可以用于完成帮助界面的设计</li>
+<li>接着实现了关卡选择功能，这里的着重点是 <strong>如何处理触摸机制</strong> 。以达到不错的协同工作</li>
+<li>由于是分屏滚动，所以完成了一个页索引 “指示球功能”</li>
+</ul>
+
+
+<p>本文所使用的 Cocos2d-x 为当前的稳定版本 2.1.4。（如无说明，文章内容总是配合 当前最新 稳定版库）
+原来是使用 Cocos2d-x 2.0.4 编写的功能，周末花了点事件进行了整理 和 重构（触摸机制的重构）。</p>
+
+<!-- more -->
+
+
+<hr />
+
+<h2>可拖动界面的实现 （帮助界面）</h2>
+
+<p>实现帮助界面，那么我们首先要考虑的是，我们需要一个什么样的效果？大致总结如下：</p>
+
+<ul>
+<li>一个可分屏显示的界面是必须的</li>
+<li>界面可以拖动操作，多屏滚动</li>
+<li>还想添加一个滚动屏幕的校队，以使显示区域正好是屏幕宽度的倍数</li>
+</ul>
+
+
+<p>现在我们将要使用 CCScrollView 来实现这么样一个功能，那么它需要哪些 <strong>元素</strong> 以及需要解决哪些设计上的问题，整理一下思路先：</p>
+
+<ul>
+<li>首先需要一个 CCScrollView 层，和一个包含内容的容器层（CCLayer）</li>
+<li>处理触摸操作，我们直接启用 CCScrollView 的可触摸操作，就已经能够完成对 CCScrollView 的拖动，这是它本身所提供的功能</li>
+<li>CCScrollView 本身所提供的触摸操作，默认情况有诸多不便，虽然能够拖动，但区域控制器来确很繁琐，更何况我们还需要校队，对齐等操作</li>
+<li>所以我们将 触摸 的操作交由 CCScrollView 所在的层（或者当前运行的场景），禁用 CCScrollView 的触摸，我们通过处理当前界面的触摸，用以控制 CCScrollView 的行为，是一个可行的解决方案</li>
+</ul>
+
+
+<p>下面给出相应的关键代码，实现以上功能（本文的示例都在此处 <a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/MacCpp/Classes/LevelView.cpp">源码查看</a>）：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 创建一个 CCScrollView, 内容大小和当前的界面一样</span>
+</span><span class='line'><span class="n">CCScrollView</span><span class="o">*</span> <span class="n">scrollView</span> <span class="o">=</span> <span class="n">CCScrollView</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">getContentSize</span><span class="p">());</span>
+</span><span class='line'><span class="c1">// 设定容器层，我们并不需要重新设置 scrollview 的 ContentSize，容器层内部设定即可</span>
+</span><span class='line'><span class="n">scrollView</span><span class="o">-&gt;</span><span class="n">setContainer</span><span class="p">(</span><span class="n">getContainLayer</span><span class="p">());</span>
+</span><span class='line'><span class="c1">// 关闭 scrollView 的可触摸操作</span>
+</span><span class='line'><span class="n">scrollView</span><span class="o">-&gt;</span><span class="n">setTouchEnabled</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 容器层内容实现</span>
+</span><span class='line'><span class="n">CCLayer</span><span class="o">*</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">getContainLayer</span><span class="p">(){</span>
+</span><span class='line'>    <span class="n">m_nPageCount</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">CCSize</span> <span class="n">winSize</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getWinSize</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">CCPoint</span> <span class="n">pointCenter</span> <span class="o">=</span> <span class="n">ccp</span><span class="p">(</span><span class="n">winSize</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">winSize</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">CCLayer</span><span class="o">*</span> <span class="n">layer</span> <span class="o">=</span> <span class="n">CCLayer</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">layer</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">CCPointZero</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// 添加 frame，每 一页 用一张背景图显示</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">m_nPageCount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">CCSprite</span><span class="o">*</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;level/frame.png&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">frame</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccpAdd</span><span class="p">(</span><span class="n">pointCenter</span><span class="p">,</span> <span class="n">ccp</span><span class="p">(</span><span class="n">winSize</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)));</span>
+</span><span class='line'>        <span class="n">layer</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">frame</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">layer</span><span class="o">-&gt;</span><span class="n">setContentSize</span><span class="p">(</span><span class="n">CCSizeMake</span><span class="p">(</span><span class="n">winSize</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">m_nPageCount</span><span class="p">,</span> <span class="n">winSize</span><span class="p">.</span><span class="n">height</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">layer</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>完成以上内容，那么基本准备工作就做好了。上面我们要注意区分两个概念，ViewSize 和 ContentSize，ViewSize 是 scrollView 所显示区域的大小，ContentSize 是滚动层的区域大小，一般而言，ViewSize 就是 ContentSize 上可见的一部分区域，通过拖动可以显示不同的部分。</p>
+
+<p>后面继续，触摸处理相关代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 关闭 scrollview 的触摸，相应的，我们要启用当前的触摸，并注册为单点触摸类型</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">registerWithTouchDispatcher</span><span class="p">(){</span>
+</span><span class='line'>    <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getTouchDispatcher</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addTargetedDelegate</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">bool</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">ccTouchBegan</span><span class="p">(</span><span class="n">cocos2d</span><span class="o">::</span><span class="n">CCTouch</span> <span class="o">*</span><span class="n">pTouch</span><span class="p">,</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCEvent</span> <span class="o">*</span><span class="n">pEvent</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">// 记录触摸起始点的位置</span>
+</span><span class='line'>    <span class="n">m_touchPoint</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">convertToGL</span><span class="p">(</span><span class="n">pTouch</span><span class="o">-&gt;</span><span class="n">getLocationInView</span><span class="p">());</span>
+</span><span class='line'>  <span class="c1">// 记录触摸起始点的偏移</span>
+</span><span class='line'>    <span class="n">m_touchOffset</span> <span class="o">=</span> <span class="n">getScrollView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getContentOffset</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">ccTouchMoved</span><span class="p">(</span><span class="n">cocos2d</span><span class="o">::</span><span class="n">CCTouch</span> <span class="o">*</span><span class="n">pTouch</span><span class="p">,</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCEvent</span> <span class="o">*</span><span class="n">pEvent</span><span class="p">){</span>
+</span><span class='line'>    <span class="n">CCPoint</span> <span class="n">movePoint</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">convertToGL</span><span class="p">(</span><span class="n">pTouch</span><span class="o">-&gt;</span><span class="n">getLocationInView</span><span class="p">());</span>
+</span><span class='line'>  <span class="c1">// 获得当前的拖动距离</span>
+</span><span class='line'>    <span class="kt">float</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">movePoint</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">m_touchPoint</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// 设定当前偏移位置</span>
+</span><span class='line'>    <span class="n">CCPoint</span> <span class="n">adjustPoint</span> <span class="o">=</span> <span class="n">ccp</span><span class="p">(</span><span class="n">m_touchOffset</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">distance</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// 让 scrollView 跟着 move 操作而移动</span>
+</span><span class='line'>    <span class="n">getScrollView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setContentOffset</span><span class="p">(</span><span class="n">adjustPoint</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">ccTouchEnded</span><span class="p">(</span><span class="n">cocos2d</span><span class="o">::</span><span class="n">CCTouch</span> <span class="o">*</span><span class="n">pTouch</span><span class="p">,</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCEvent</span> <span class="o">*</span><span class="n">pEvent</span><span class="p">){</span>
+</span><span class='line'>    <span class="n">CCPoint</span> <span class="n">endPoint</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">convertToGL</span><span class="p">(</span><span class="n">pTouch</span><span class="o">-&gt;</span><span class="n">getLocationInView</span><span class="p">());</span>
+</span><span class='line'>    <span class="kt">float</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">endPoint</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">m_touchPoint</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class='line'>  
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">){</span>
+</span><span class='line'>        <span class="c1">// 小于三，不做拖动操作，也排除了（抖动误操作）</span>
+</span><span class='line'>    <span class="p">}</span><span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">){</span>
+</span><span class='line'>        <span class="c1">// 大于 50，执行拖动效果</span>
+</span><span class='line'>        <span class="n">adjustScrollView</span><span class="p">(</span><span class="n">distance</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>        <span class="c1">// 回退为拖动之前的位置</span>
+</span><span class='line'>        <span class="n">adjustScrollView</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">ccTouchCancelled</span><span class="p">(</span><span class="n">cocos2d</span><span class="o">::</span><span class="n">CCTouch</span> <span class="o">*</span><span class="n">pTouch</span><span class="p">,</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCEvent</span> <span class="o">*</span><span class="n">pEvent</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">// 参数为 0 表示 恢复之前的屏幕位置</span>
+</span><span class='line'>    <span class="n">adjustScrollView</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">adjustScrollView</span><span class="p">(</span><span class="kt">float</span> <span class="n">offset</span><span class="p">){</span>
+</span><span class='line'>    <span class="n">CCSize</span> <span class="n">winSize</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getWinSize</span><span class="p">();</span>
+</span><span class='line'>    <span class="c1">// 我们根据 offset 的实际情况来判断移动效果</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">offset</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>     <span class="c1">// 表示右移</span>
+</span><span class='line'>        <span class="n">m_nCurPage</span> <span class="o">++</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">offset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">m_nCurPage</span> <span class="o">--</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 屏幕 页数 检测</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">m_nCurPage</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">m_nCurPage</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">m_nCurPage</span> <span class="o">&gt;</span> <span class="n">m_nPageCount</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">m_nCurPage</span> <span class="o">=</span> <span class="n">m_nPageCount</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 根据当前的 页数 获得偏移量，并设定新的位置，且启用动画效果</span>
+</span><span class='line'>    <span class="n">CCPoint</span> <span class="n">adjustPoint</span> <span class="o">=</span> <span class="n">ccp</span><span class="p">(</span><span class="o">-</span><span class="n">winSize</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">m_nCurPage</span> <span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">getScrollView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setContentOffsetInDuration</span><span class="p">(</span><span class="n">adjustPoint</span><span class="p">,</span> <span class="mf">0.2f</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;current page index: %d&quot;</span><span class="p">,</span> <span class="n">m_nCurPage</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>由以上的内容，便完成了我们所需要的帮助界面的效果，一个可拖动，滚动的界面，页面数根据自己需要来定，这里只是实现的步骤，当然在这个界面里面要放什么元素，那就要看你的心情了，哈！</p>
+
+<p>要放什么元素？我们基于以上的实现，在里面添加可点击项，以完成一个关卡选择功能！</p>
+
+<hr />
+
+<h2>扩展，实现关卡选择功能</h2>
+
+<p>关卡选择 就界面而言，和上面所说的帮助界面并没有太大区别，所不同的是，除了触摸拖动界面之外，还可以点击内部的元素，如关卡，以实现不同的功能，所以我们基于以上的内容，扩展添加实现关卡选择功能。</p>
+
+<p>实现以下代码，完成在界面添加关卡精灵元素：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 修改层内容实现</span>
+</span><span class='line'><span class="n">CCLayer</span><span class="o">*</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">getContainLayer</span><span class="p">(){</span>
+</span><span class='line'>    <span class="n">m_nPageCount</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// ..... 此处省略，参照上文</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 在此处添加关卡精灵</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">levelCount</span><span class="p">;</span> <span class="n">i</span> <span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">CCNode</span><span class="o">*</span> <span class="n">level</span> <span class="o">=</span> <span class="n">getSpriteByLevel</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+</span><span class='line'>        <span class="c1">// 设置位置</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">curPageIndex</span> <span class="o">=</span> <span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">widthCount</span> <span class="o">*</span> <span class="n">heightCount</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">float</span> <span class="n">xOffset</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">100</span> <span class="o">+</span> <span class="mi">90</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">float</span> <span class="n">yOffset</span> <span class="o">=</span> <span class="n">winSize</span><span class="p">.</span><span class="n">height</span> <span class="o">-</span> <span class="p">((</span><span class="n">i</span> <span class="o">%</span> <span class="p">(</span><span class="n">widthCount</span> <span class="o">*</span> <span class="n">heightCount</span><span class="p">))</span> <span class="o">/</span> <span class="n">widthCount</span> <span class="o">*</span> <span class="mi">120</span> <span class="o">+</span> <span class="mi">180</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">level</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccp</span><span class="p">(</span><span class="n">xOffset</span> <span class="o">+</span> <span class="n">winSize</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">curPageIndex</span><span class="p">,</span> <span class="n">yOffset</span><span class="p">));</span>
+</span><span class='line'>      <span class="c1">// 这里使用了 zOrder = 2，用此值来构建层次关系，如后文将要添加的显示点击背景效果</span>
+</span><span class='line'>        <span class="n">layer</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">level</span> <span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">layer</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 这里是上面所用到的方法</span>
+</span><span class='line'><span class="n">CCNode</span><span class="o">*</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">getSpriteByLevel</span><span class="p">(</span><span class="kt">int</span> <span class="n">level</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">CCSprite</span><span class="o">*</span> <span class="n">sprite</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;level/level.png&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// 添加关卡标示</span>
+</span><span class='line'>    <span class="n">CCString</span><span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="n">CCString</span><span class="o">::</span><span class="n">createWithFormat</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">CCLabelBMFont</span><span class="o">*</span> <span class="n">label</span> <span class="o">=</span> <span class="n">CCLabelBMFont</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">getCString</span><span class="p">(),</span><span class="s">&quot;level/prim30.fnt&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">label</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccp</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">45</span><span class="p">));</span>
+</span><span class='line'>    <span class="n">sprite</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">label</span><span class="p">);</span>
+</span><span class='line'>  
+</span><span class='line'>    <span class="c1">// 这里可以再为 关卡精灵做些装饰，就像 lable 一样，如样式，关卡锁等其它元素</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">sprite</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>写到这里，我们就完成了所有的显示效果，并且可以拖动界面显示不同的页，还有关卡选择的精灵，不过现在还欠缺的就是，关卡点击的操作了！要实现一个可点击操作的功能，我们可以有以下几种常用的方式：</p>
+
+<ul>
+<li>使用 CCMenu 来作为点击项的操作：一般而言，一叶不喜欢使用 CCMenu，因为它的触摸时机不好控制，特别是在当前界面可拖动的情况，还有些冲突，解决起来也挺麻烦，一个显著的影响是，点击 CCMenu 的时候，拖动滚屏就失去了效果，如果你有精力着折腾使用 CCMenu ,那么无妨～</li>
+<li>使用常用精灵，以容器层接受触摸消息，然后依次遍历精灵，条件判断是否产生点击项，这是一个常用的方法，需要设定好一系列集合，遍历，判断等复杂的步骤，特别是类似方块游戏中用的挺多，总乐此不疲～话说一叶之前也是这么实现的！但是实现起来也时相当麻烦的～而且编写的逻辑不能够被重用（其它游戏类似功能）</li>
+<li>建立一套新的机制，来满足特性情况下的需求，也就是封装一套解决方案，以方便对诸如此类的操作，这让一叶想到了之前的文章 《<a href="http://blog.leafsoar.com/archives/2013/05-25-10.html">多层 UI 触摸事件的轻量级设计</a>》（这种设计能够适应大多情况，正好用在此处，看看它的实用性如何！），在写这篇文章的时候，也将此处的操作用这样的机制重构一番。</li>
+</ul>
+
+
+<hr />
+
+<h3><strong>基于 LsTouch 的触摸机制实现</strong></h3>
+
+<p>在阅读以下内容之前，可以先看《<a href="http://blog.leafsoar.com/archives/2013/05-25-10.html">多层 UI 触摸事件的轻量级设计</a>》一文，里面详细介绍了它的实现机制，以及特性，可以简称它为 <strong>LsTouch</strong>，而此文是将这种设计用在可用之处。当然作为封装来说，你并不需要了解它的内部实现，就能够很好的使用它。或者换句话说，作为封装的模块，你只需要知道，如下这样使用它就行，它能帮我们解决触摸操作的问题，如果对内部实现感兴趣，可以去看一看实现。它的步骤如下。</p>
+
+<p> 继承 <strong>LsTouchEvent</strong> 并实现 <strong>touchEventAction</strong> 接口函数，这样做以后将意味着，你可以在这个类中使用 <strong>addLsTouch</strong> 方法添加 “可触摸” 元素，其自动管理，之后可以在任意地方调用 <strong>sendTouchMessage</strong> 方法（它将会传入当前的点击 pTouch 参数），后自动回调 touchEventAction 方法，回调参数将包含了，当前的 “可触摸” 元素的引用，你因此知道，你点击的是哪个元素（如 哪个关卡）。以下用代码来说明其实现（我们将旧代码注释，以体现所改动的地方）：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 继承 LsTouchEvent 并实现接口函数</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">touchEventAction</span><span class="p">(</span><span class="n">LsTouch</span> <span class="o">*</span><span class="n">touch</span><span class="p">,</span> <span class="kt">int</span> <span class="n">type</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">touch</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;touch event action id: %d  type: %d&quot;</span><span class="p">,</span> <span class="n">touch</span><span class="o">-&gt;</span><span class="n">getEventId</span><span class="p">(),</span> <span class="n">type</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 改写上文，返回精灵函数，使之变为可操作项</span>
+</span><span class='line'><span class="n">CCNode</span><span class="o">*</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">getSpriteByLevel</span><span class="p">(</span><span class="kt">int</span> <span class="n">level</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// CCSprite* sprite = CCSprite::create(&quot;level/level.png&quot;);</span>
+</span><span class='line'>    <span class="c1">// // 添加关卡标示</span>
+</span><span class='line'>    <span class="c1">// CCString* str = CCString::createWithFormat(&quot;%d&quot;, level + 1);</span>
+</span><span class='line'>    <span class="c1">// CCLabelBMFont* label = CCLabelBMFont::create(str-&gt;getCString(),&quot;level/prim30.fnt&quot;);</span>
+</span><span class='line'>    <span class="c1">// label-&gt;setPosition(ccp(40, 45));</span>
+</span><span class='line'>    <span class="c1">// sprite-&gt;addChild(label);</span>
+</span><span class='line'>    <span class="c1">// // 这里可以再为 关卡精灵做些装饰，就像 lable 一样</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// 可以看到改动的地方不多，这样就把需要显示的精灵，包装成了可操作项</span>
+</span><span class='line'>    <span class="n">LsTouch</span><span class="o">*</span> <span class="n">touch</span> <span class="o">=</span> <span class="n">LsTouch</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">touch</span><span class="o">-&gt;</span><span class="n">setDisplay</span><span class="p">(</span><span class="n">sprite</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// 可触摸项添加到可触摸项集合，关卡 level 作为 eventId 传递</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">-&gt;</span><span class="n">addLsTouch</span><span class="p">(</span><span class="n">touch</span><span class="p">,</span> <span class="n">level</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">touch</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 在触摸函数里面添加，发送触摸消息，只需要添加一句话</span>
+</span><span class='line'><span class="kt">bool</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">ccTouchBegan</span><span class="p">(</span><span class="n">cocos2d</span><span class="o">::</span><span class="n">CCTouch</span> <span class="o">*</span><span class="n">pTouch</span><span class="p">,</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCEvent</span> <span class="o">*</span><span class="n">pEvent</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">// CCLog(&quot;touch begin.&quot;);</span>
+</span><span class='line'>    <span class="c1">// m_touchPoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());</span>
+</span><span class='line'>    <span class="c1">// m_touchOffset = getScrollView()-&gt;getContentOffset();</span>
+</span><span class='line'>  
+</span><span class='line'>    <span class="c1">// 发送触摸消息，并会在 touEventAction 自动相应， 如果触摸到元素</span>
+</span><span class='line'>    <span class="n">sendTouchMessage</span><span class="p">(</span><span class="n">pTouch</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 这里也是同样</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">ccTouchEnded</span><span class="p">(</span><span class="n">cocos2d</span><span class="o">::</span><span class="n">CCTouch</span> <span class="o">*</span><span class="n">pTouch</span><span class="p">,</span> <span class="n">cocos2d</span><span class="o">::</span><span class="n">CCEvent</span> <span class="o">*</span><span class="n">pEvent</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// CCPoint endPoint = CCDirector::sharedDirector()-&gt;convertToGL(pTouch-&gt;getLocationInView());</span>
+</span><span class='line'>    <span class="c1">// float distance = endPoint.x - m_touchPoint.x;</span>
+</span><span class='line'>    <span class="c1">// float distanceY = endPoint.y - m_touchPoint.y;</span>
+</span><span class='line'>    <span class="c1">//if (fabs(distance) &lt; 3 &amp;&amp; fabs(distanceY) &lt; 3){</span>
+</span><span class='line'>        <span class="c1">// 小于三，不做拖动操作，也排除了（抖动误操作）,第二个参数，事件类型 1： touch end， 由 touchEventAction 自动响应</span>
+</span><span class='line'>        <span class="n">sendTouchMessage</span><span class="p">(</span><span class="n">pTouch</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">//</span>
+</span><span class='line'>    <span class="c1">//}else if (fabs(distance) &gt; 50){</span>
+</span><span class='line'>    <span class="c1">//    // 大于 50，执行拖动效果</span>
+</span><span class='line'>    <span class="c1">//    adjustScrollView(distance);</span>
+</span><span class='line'>    <span class="c1">//}else{</span>
+</span><span class='line'>    <span class="c1">//    // 回退为拖动之前的位置</span>
+</span><span class='line'>    <span class="c1">//    adjustScrollView(0);</span>
+</span><span class='line'>    <span class="c1">//}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 无论如何，触摸结束，类型为 2</span>
+</span><span class='line'>    <span class="n">sendTouchMessage</span><span class="p">(</span><span class="n">pTouch</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>上文，我们对 getSpriteByLevel 所返回的精灵做了包装处理，然后在 ccTouch 函数，调用发送触摸消息，然后自动回调 <strong>touchEventAction</strong> 函数，并带回了点击项的参数，这个点击项就包含了关卡信息 eventId ，还扩展了事件类型，表示是在 ccTouchBegin 还是 ccTouchEnd 种调用的，并依次做相应的逻辑操作。</p>
+
+<p>下面具体实现回调函数的逻辑处理，它实现了点击项高亮显示，点击成功时通过 CCMessageBox 弹出提示：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">LevelView</span><span class="o">::</span><span class="n">touchEventAction</span><span class="p">(</span><span class="n">LsTouch</span> <span class="o">*</span><span class="n">touch</span><span class="p">,</span> <span class="kt">int</span> <span class="n">type</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// type 事件类型，0：touchbegin 1：touchend 触发 2：touchend 未触发</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">touch</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;touch event action id: %d  type: %d&quot;</span><span class="p">,</span> <span class="n">touch</span><span class="o">-&gt;</span><span class="n">getEventId</span><span class="p">(),</span> <span class="n">type</span><span class="p">);</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">selectTag</span> <span class="o">=</span> <span class="mi">10001</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">touch</span><span class="p">){</span>
+</span><span class='line'>        <span class="n">getScrollView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getContainer</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">removeChildByTag</span><span class="p">(</span><span class="n">selectTag</span><span class="p">);</span>
+</span><span class='line'>        <span class="c1">// 添加选撞状态的精灵，背景 高亮显示</span>
+</span><span class='line'>        <span class="n">CCSprite</span><span class="o">*</span> <span class="n">sprite</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;level/sel.png&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">sprite</span><span class="o">-&gt;</span><span class="n">setScaleX</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">sprite</span><span class="o">-&gt;</span><span class="n">setScaleY</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">sprite</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">touch</span><span class="o">-&gt;</span><span class="n">getPosition</span><span class="p">());</span>
+</span><span class='line'>      <span class="c1">// 这里使用了 zOrder = 1 以保证，高亮图片显示在 实际关卡图片后面</span>
+</span><span class='line'>        <span class="n">getScrollView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getContainer</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">sprite</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">selectTag</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">getScrollView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getContainer</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">removeChildByTag</span><span class="p">(</span><span class="n">selectTag</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">touch</span><span class="p">){</span>
+</span><span class='line'>        <span class="c1">// 收到 type 为 1 表示触发关卡选择</span>
+</span><span class='line'>        <span class="n">CCString</span><span class="o">*</span> <span class="n">str</span> <span class="o">=</span> <span class="n">CCString</span><span class="o">::</span><span class="n">createWithFormat</span><span class="p">(</span><span class="s">&quot;您选择的关卡为 %d .&quot;</span><span class="p">,</span> <span class="n">touch</span><span class="o">-&gt;</span><span class="n">getEventId</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">CCMessageBox</span><span class="p">(</span><span class="s">&quot;关卡&quot;</span><span class="p">,</span> <span class="n">str</span><span class="o">-&gt;</span><span class="n">getCString</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>这里的 LsTouch 根据实际情况 比 原来（原来是指《<a href="http://blog.leafsoar.com/archives/2013/05-25-10.html">多层 UI 触摸事件的轻量级设计</a>》）做了些改进。</p>
+
+<ul>
+<li>内部判断去除了一些不必要的判断</li>
+<li>修改消息类型，添加 type 参数，我们可以根据次参数判断消息类型</li>
+<li>修改 touchEventAction 为总是回调（在发送消息时），而原来的做法是，这样做的好处是我们可以根据第一个参数是否为空，来做一些处理，而原来只在有点击操作才回调</li>
+</ul>
+
+
+<p>关于这里使用继承 LsTouchEvent 实现 touchEventAction 回调函数的方式，需要简单说明以下，这里设计的核心是使用一个集合管理一推“可触摸”项。至于我用什么方式实现，那不重要，例如换种设计，不用继承实现接口，使用 回调函数绑定，就像绑定 CCMenu 回调一样，如果 C++ 能够像 Java 编写匿名类实现回调，那就更优雅了～实现要 “<strong>达到可用简单，通用难！</strong>”，这里只是一种可行方案。</p>
+
+<hr />
+
+<h2>锦上添花，添加当前页指示球</h2>
+
+<p>当前界面的所有功能已经实现完毕，如果使用它们，你需要注意一些地方，比如关卡精灵可以根据自己需要扩展其元素内容等。由于时滚动分页，为了一目了然我们当前的页，所以也添加了代码实现在屏幕上方设定了 <strong>页数指示球</strong>（我给起的名），指示球会在你拖动界面的时候有动态效果，放大当前 页数的指示球，给予更好的用户体验，关于这部分代码我就不贴了，可以直接从源码里面看见，方法名为 <strong>setCurPageBall</strong>，它会根据总页数和当前页数自动处理，你所需要做的只是在合适的时候调用它即可。</p>
+
+<p>注意：为了让问题更有针对性，在本文中所有的位置关系所参考的都是 WinSize，
+这意味着，如果你在不同的屏幕适配方案中可能需要有所改动，对屏幕适配这里有一篇文章可以作为参考《<a href="http://blog.leafsoar.com/archives/2013/05-10-19.html">Cocos2d-x 屏幕适配新解</a>》。</p>
+
+<p><img src="/images/2013/2013-07-27-1.jpg" alt="图片" /></p>
+
+<p>它完成了以下几个功能（<a href="https://github.com/leafsoar/ls-cocos2d-x/blob/master/MacCpp/Classes/LevelView.cpp">示例源码</a>）：</p>
+
+<ul>
+<li>帮助界面功能的实现：一个可拖动滚屏的界面展示</li>
+<li>实现滚屏的自动校队，一页一页展示</li>
+<li>关卡点击事件处理，实现关卡功能</li>
+<li>选中关卡的高亮显示，背景标示</li>
+<li>由于没有使用 CCMenu ，所以不存在触摸优先级问题，在点击 “关卡” 的同时可拖动屏幕</li>
+<li>点击抖动误操作判断（如本来想点击关卡，如果移动了位置[移动范围大于指定值]，那么将执行拖动操作）</li>
+<li>当前页指示球功能</li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-27T17:30:00+08:00" pubdate data-updated="true">Jul 27<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/06-04.html" title="Previous Post: 深入理解 Cocos2d-x 内存管理">&laquo; 深入理解 Cocos2d-x 内存管理</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,1 +1,715 @@
-My Octopress Page is coming soon &hellip;
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/index.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-27T17:30:00+08:00" pubdate data-updated="true">Jul 27<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>本文介绍了 CCScrollView 来编写帮助界面和关卡选择界面的方法，在编写这样一个功能之时，大多会遇到一些困难，这里也是同样，最后提供了一个相应且合理的解决方案，并解说了其它实现方案的优缺点，这里的内容，你可以直接拿去用，或者可以作为实现的参考。总能找到你需要的东西，或多～或少～。文章大致内容如下：</p>
+
+<ul>
+<li>首先实现了一个可拖动的界面，滚屏屏幕，它可以用于完成帮助界面的设计</li>
+<li>接着实现了关卡选择功能，这里的着重点是 <strong>如何处理触摸机制</strong> 。以达到不错的协同工作</li>
+<li>由于是分屏滚动，所以完成了一个页索引 “指示球功能”</li>
+</ul>
+
+
+<p>本文所使用的 Cocos2d-x 为当前的稳定版本 2.1.4。（如无说明，文章内容总是配合 当前最新 稳定版库）
+原来是使用 Cocos2d-x 2.0.4 编写的功能，周末花了点事件进行了整理 和 重构（触摸机制的重构）。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/07-27.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-04T10:50:00+08:00" pubdate data-updated="true">Jun 4<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
+
+<p>我觉得 <strong>最好的学习方式是以自己的语言组织，说与别人听 ～</strong> 这样对自己：更容易发现平时容易忽略的问题，对别人：或多或少也有所助益！以学习为目的，而别人的受益算是附带的效果，这样一个出发点 ~</p>
+
+<p>由浅入深，总览全局（或者由整体到局部）是我喜欢的出发点，或者思考角度，我不喜欢拘泥于细节的实现，因为那会加大考虑问题的复杂度，所以 <strong>把复杂的问题简单化，是必然的过程。</strong> 那么本文就说说 Cocos2d-x 的架构是如何设计以方便内存管理的。从理论到实践 ~(当然是从我看问题的角度 :P，读者如有异议，欢迎讨论！文本使用 cocos2d-x 2.0.4 解说。)</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/06-04.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-29T10:10:00+08:00" pubdate data-updated="true">May 29<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
+
+<p>而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d-x ，或者说，缺少那么一种 <strong>规范</strong>，如果存在了这么一种 <strong>规范</strong>，而使得 Cocos2d-x 更为简单优雅，那势必是游戏的开发过程，更加从新所欲，把重点放在游戏本身的设计之上。</p>
+
+<h2>Retain 与 Release 乃万恶之源</h2>
+
+<p>稍微了解一点就能知道 Cocos2d-x 是基于引用计数来管理内存的，应用计数的加减就是 retain 和 release 方法的实现。在大多数情况下我们不用 <strong>显示</strong> 的去调用这两种方法，如在 <strong>CCNode</strong> 的 <strong>addChild</strong> 和 <strong>removeChild</strong> 方法，<strong>CCArray</strong> 的 <strong>addObject</strong> 和 <strong>removeObject</strong> 等这样成双成对的方法，对于这些的使用很简单，一叶上篇文章 <strong><a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a></strong> 从概念上简单的分析了内部对象的生命周期特点，在此 <strong>浅说</strong> 之中，我刻意的绕过了它的底层实现，并没有深究其原理，对引用计数等概念也只是几句话一带而过，重点放在使用者该关心什么，该注意什么。因为我觉得 <strong>引用计数是个坑，一个很大的坑 ~</strong></p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-29.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-25T10:10:00+08:00" pubdate data-updated="true">May 25<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>轻量级</strong>:一叶非常喜欢的名词，在重量级和轻量级之间，如果做选择的话，一定会选择轻量级，它的特点首先是设计简单小巧，使用方便，更具有灵活性，扩展方便。重量级则大而丰富，全面，但略显笨重，在程序设计之初大多需要全盘考虑。而轻重之间的概念是相对而言，并没有严格的界限。</p>
+
+<h2>Cocos2d-x 触摸事件机制概论</h2>
+
+<p>在 cocos2d-x 使用触摸来触发一些操作是很常用的功能，如果界面非常简单，只需要启用相应层的触摸功能，并处理其触摸事件即可，而如果界面的 UI 复杂，多层管理，又有着隐藏控制，灵活多变，比如 MMO 游戏，当然手游不会 <strong>那么</strong> 复杂，那么现有的机制实现起来就显得捉襟见肘了，即便实现，也很难维护，而一个简单的方式是 <strong>只在场景的 基层 接受触摸消息，然后由此基层向上层发送触摸的消息</strong>，上层再根据实际情况进行处理，判断可触摸元素优先级，是否隐藏，返回处理结果，再一层层向下传递，保证实际的操作是我们所期望的。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-25.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-22T23:30:00+08:00" pubdate data-updated="true">May 22<span>nd</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其<strong>“机制”</strong>，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用，固为浅说。</p>
+
+<h2>无用对象 与 管理对象</h2>
+
+<p><strong>Cocos2d-x 将会在下一帧自动清理无用的对象，什么是无用的对象，通过 create() 方法创建的就是无用的对象。</strong></p>
+
+<p>为了简要说明，代码的组织设计一切从简，我们创建了两个辅助类和一个容器类 BaseLayer，在 BaseLayer 之上管理内部对象，并观察它是怎么自动管理对象的。实现了其 构造函数 方法和 析构函数，并做些日志打印，以方便我们观察：</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-22.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-15.html">类 Android 多级日志系统应用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-15T17:30:00+08:00" pubdate data-updated="true">May 15<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在 cocos2d-x 中实现类 Android 多级日志系统！写程序，免不了调试打印 Log ，而一个方便的日志系统，可以提高不少开发的效率，写过 Android 应用的朋友应该了解在 Android 中的日志包含很多等级，查看日志的时候可以指定日志的级别，从而过滤一些无用的信息，能够更为快速的定位问题的所在。而在 cocos2d-x 的开发中，统一使用 <strong>CCLog</strong>，只能算是最基本的功能，既然有好的思想可以借鉴，何乐而不为呢～</p>
+
+<p>先看看最终实现的效果，我们使用简单封装过的方法调用打印日志系统（Leafsoar Log:LSLog）：</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-15.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-13.html">Cocos2d-x 屏幕适配新解 - 兼容与扩展</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-13T08:02:00+08:00" pubdate data-updated="true">May 13<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在读这篇文章之前，先读前一篇文章 <a href="http://blog.leafsoar.com/archives/2013/05-10-19.html">Cocos2d-x 屏幕适配新解</a> 是必要的。</p>
+
+<p>如果说前一篇文章文章在 LsSize 提出之前的是基础，LsSize 是应用，那么对于这篇文章来说，LsSize 是基础，而这里是其的综合应用，我之初衷是其扩展性和兼容性，激发读者思维。也许你并没有体会出 LsSize 的强大，而实际上，<strong>它能做的比你想象的要多的多，这是前话 ~</strong></p>
+
+<h2>ShoAll 模式的兼容</h2>
+
+<p>首先 LsSize 能满足 ShowAll 模式的需要，因为开始就是把 LsSize 当作 ShowAll 中的 WinSize 来设计的。 并且可以为背景做装饰，而在游戏设计之时并没有什么区别，LsSize 可以设定显示区域的大小，使背景层与 LsSize 分离（这一点在上一篇文章最后已经提到），从而保证了游戏的元素不会超出 LsSize 而露出到 VisibleSize 的区域内。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-13.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-10.html">Cocos2d-x 屏幕适配新解</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-10T19:02:00+08:00" pubdate data-updated="true">May 10<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>为了适应移动终端的各种分辨率大小，各种屏幕宽高比，在 cocos2d-x（当前稳定版：<strong>2.0.4</strong>） 中，提供了相应的解决方案，以方便我们在设计游戏时，能够更好的适应不同的环境。</p>
+
+<p>而在设计游戏之初，决定着我们屏幕适配的因素有哪些，简而言之只有两点：<strong>屏幕大小 和 宽高比</strong>。这两个因素是如何影响游戏的：</p>
+
+<ul>
+<li><strong>屏幕大小：</strong> 从小分辨率 <strong>480x320</strong> 到 <strong>1280x800</strong> 分辨率，再到全高清 <strong>1080p</strong>，从手机到平板，还有苹果设备的 <strong>Retina</strong> 屏，这么多不同的分辨率，而且大小差距甚大，不可能做到一套资源走天下，资源往小了设计，在大屏幕会显示模糊，图片往大了设计，在小屏幕设备又太浪费，而且小屏幕的手机硬件资源也会相对的紧缺，所以 <strong>根据屏幕大小使用不同的资源</strong> 是有必要的，而 cocos2d-x 也帮我们解决了这一点。</li>
+<li><strong>宽高比：</strong> 什么是宽高比，就是你的屏幕是方的还是长的，靠近方形的分辨率如 480x320，比例为 <strong>3:2</strong>，还有 960x540 的 <strong>16:9</strong> 标准宽屏，这也算是两种总极端情况了，如果能在这两种比例情况做好适配基本就可以了，如果比 3:2 “更方”如 4:3，比 16:9 “更长”，那么不论如何布局，显示效果差距甚大，最好对固定比例优化吧。当在宽高比在一定范围内，可以通过灵活编写程序去适应，而在显示效果上，cocos2d-x 为我们提供了三种模式，这些 <strong>模式更多的是帮我们解决比例不一的情况而存在</strong> 的，如果只是屏幕大小（比例一样），那通过简单的放大缩小即可完成。</li>
+</ul>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-10.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-08.html">实现 Cocos2d-x 全局定时器</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-08T21:30:00+08:00" pubdate data-updated="true">May 8<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>cocos2d-x 中有自己的定时器实现，一般用法是在场景，层等内部实现，定时器的生命周期随着它们的消亡而消亡，就运行周期而言，相对最长的是场景，如果在多个场景切换并且保持定时器的运行，那我们就需要定义一个自己的  <strong>全局定时器</strong>。</p>
+
+<p>平时所使用的定时器，我们可以直接使用，是因为 <strong>CCNode</strong> 帮我们实现了定时器的封装，一个简单的做法，是定义个全局的静态 CCNode 对象，在程序运行之初初始化，并执行其定时器任务，而不由任何场景所管理即可实现，但在这里，一叶对定时器的内部实现稍作了解后，封装了自己实现的全局定时解决方案，代码如下(<a href="https://github.com/leafsoar/ls-cocos2d-x/tree/master/Learn/Classes/GlobalSchedule">获取源码</a> )：</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-08.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/05-05.html">Cocos2d-x 程序是如何开始运行与结束的</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-05T23:30:00+08:00" pubdate data-updated="true">May 5<span>th</span>, 2013</time>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力</strong></p>
+
+<h2>问题的由来</h2>
+
+<p>怎么样使用 Cocos2d-x 快速开发游戏，方法很简单，你可以看看其自带的例程，或者从网上搜索教程，运行起第一个 Scene <strong>HelloWorldScene</strong>，然后在 HelloWorldScene 里面写相关逻辑代码，添加我们的层、精灵等 ~ 我们并不一定需要知道 Cocos2d-x 是如何运行或者在各种平台之上运行，也不用知道 Cocos2d-x 的游戏是如何运行起来的，它又是如何渲染界面的 ~~~</p>
+
+<p>我们只用知道 Cocos2d-x 的程序是由 <strong>AppDelegate</strong> 的方法 <strong>applicationDidFinishLaunching</strong> 开始，在其中做些必要的初始化，并创建运行<strong>第一个 CCScene</strong> 即可，正如我们第一次使用各种编程语言写 <strong>Hello World!</strong> 的程序一样，如 Python 打印：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">print</span><span class="p">(</span><span class="s">&#39;Hello World!&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/05-05.html">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/2/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

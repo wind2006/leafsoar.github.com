@@ -1,0 +1,697 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cocos2d-x 屏幕适配新解 - 无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="为了适应移动终端的各种分辨率大小，各种屏幕宽高比，在 cocos2d-x（当前稳定版：2.0.4） 中，提供了相应的解决方案，以方便我们在设计游戏时，能够更好的适应不同的环境。 而在设计游戏之初，决定着我们屏幕适配的因素有哪些，简而言之只有两点：屏幕大小 和 宽高比。这两个因素是如何影响游戏的： &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://leafsoar.github.io/archives/2013/05-10.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">无间落叶</a>
+      
+        <span>无有入无间 ~</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:leafsoar.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cocos2d-x 屏幕适配新解</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-10T19:02:00+08:00" pubdate data-updated="true">May 10<span>th</span>, 2013</time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>为了适应移动终端的各种分辨率大小，各种屏幕宽高比，在 cocos2d-x（当前稳定版：<strong>2.0.4</strong>） 中，提供了相应的解决方案，以方便我们在设计游戏时，能够更好的适应不同的环境。</p>
+
+<p>而在设计游戏之初，决定着我们屏幕适配的因素有哪些，简而言之只有两点：<strong>屏幕大小 和 宽高比</strong>。这两个因素是如何影响游戏的：</p>
+
+<ul>
+<li><strong>屏幕大小：</strong> 从小分辨率 <strong>480x320</strong> 到 <strong>1280x800</strong> 分辨率，再到全高清 <strong>1080p</strong>，从手机到平板，还有苹果设备的 <strong>Retina</strong> 屏，这么多不同的分辨率，而且大小差距甚大，不可能做到一套资源走天下，资源往小了设计，在大屏幕会显示模糊，图片往大了设计，在小屏幕设备又太浪费，而且小屏幕的手机硬件资源也会相对的紧缺，所以 <strong>根据屏幕大小使用不同的资源</strong> 是有必要的，而 cocos2d-x 也帮我们解决了这一点。</li>
+<li><strong>宽高比：</strong> 什么是宽高比，就是你的屏幕是方的还是长的，靠近方形的分辨率如 480x320，比例为 <strong>3:2</strong>，还有 960x540 的 <strong>16:9</strong> 标准宽屏，这也算是两种总极端情况了，如果能在这两种比例情况做好适配基本就可以了，如果比 3:2 “更方”如 4:3，比 16:9 “更长”，那么不论如何布局，显示效果差距甚大，最好对固定比例优化吧。当在宽高比在一定范围内，可以通过灵活编写程序去适应，而在显示效果上，cocos2d-x 为我们提供了三种模式，这些 <strong>模式更多的是帮我们解决比例不一的情况而存在</strong> 的，如果只是屏幕大小（比例一样），那通过简单的放大缩小即可完成。</li>
+</ul>
+
+
+<!-- more -->
+
+
+<h2>三种模式</h2>
+
+<p>说是三种模式，其实还有一种 <strong>无模式</strong>，也就是 cocos2d-x 默认的适配方案，现在我们就来认识一下这些模式，并且通过这些模式去认识其中一些概念 <strong>FrameSize</strong>、<strong>WinSize</strong>、<strong>VisibleSize</strong>、<strong>VisibleOrigin</strong>，以及它们存在的意义，并且最后灵活运行这些概念 <strong>创建出一个不属于这些模式而超越这些模式的新适配解决方案</strong>，这是最终目的。</p>
+
+<h3>kResolutionUnKnown 认识 FrameSize</h3>
+
+<p>这是 cocos2d-x 编写的默认模式，没有做任何处理，在这种情况下，游戏画面的大小与比例都是不可控的，在程序运行之初，由各个平台入口函数定义画面大小：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// proj.linux/main.cpp  linux 平台手动指定画面大小</span>
+</span><span class='line'><span class="n">CCEGLView</span><span class="o">*</span> <span class="n">eglView</span> <span class="o">=</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">();</span>
+</span><span class='line'><span class="n">eglView</span><span class="o">-&gt;</span><span class="n">setFrameSize</span><span class="p">(</span><span class="mi">720</span><span class="p">,</span> <span class="mi">480</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// proj.android/jni/hellocpp/main.cpp android 平台由 jni 调用传入设备分辨率参数</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeInit</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span>  <span class="n">env</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">thiz</span><span class="p">,</span> <span class="n">jint</span> <span class="n">w</span><span class="p">,</span> <span class="n">jint</span> <span class="n">h</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getOpenGLView</span><span class="p">())</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">CCEGLView</span> <span class="o">*</span><span class="n">view</span> <span class="o">=</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">view</span><span class="o">-&gt;</span><span class="n">setFrameSize</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">AppDelegate</span> <span class="o">*</span><span class="n">pAppDelegate</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AppDelegate</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">CCApplication</span><span class="o">::</span><span class="n">sharedApplication</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// other</span>
+</span><span class='line'>      <span class="p">...</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>在此我们首先认识了 <strong>FrameSize</strong> 参数，在游戏运行时，我们可以通过 <code>CCEGLView::sharedOpenGLView()-&gt;getFrameSize();</code> 获得此值。如果在手机上运行，那么不同分辨率将会得到不同的值，既然这个值不可控，那么在写游戏中也就没有参考价值了，比如我们写一个精灵的位置距离底部 320 高度，在 480x320 分辨率，能看到其在屏幕上方，如果换一台手机分辨率 960x540 那么只能显示在中间靠上的位置，如果设置精灵位置为距离屏幕上方（高度）320，反之依然，显示效果不一。</p>
+
+<p>此时可行的方案是使用百分比，如精灵位置在屏幕横向距离左边 1/3 宽度，在 &frac12; 正中间处，而类似这样的设置也不用依赖 FrameSize 的具体数值。而这样的做法，使得内部元素像弹簧一样，随着 FrameSize 的大小改变而改变，伸缩或者挤压，对于图片资源大小也是完全不可控，如果根据屏幕大小放大缩小，那我们可以考虑用下面要说的模式，在此不推荐使用  cocos2d-x 的无模式方案。</p>
+
+<h3>kResolutionExactFit and kResolutionShowAll 认识 WinSize</h3>
+
+<p>在 AppDelegate.cpp 处可以通过设置：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setDesignResolutionSize</span><span class="p">(</span><span class="mi">720</span><span class="p">,</span> <span class="mi">480</span><span class="p">,</span> <span class="n">kResolutionShowAll</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// 或者</span>
+</span><span class='line'><span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setDesignResolutionSize</span><span class="p">(</span><span class="mi">720</span><span class="p">,</span> <span class="mi">480</span><span class="p">,</span> <span class="n">kResolutionExactFit</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>DesignResolutionSize！顾名思义，也就是逻辑上的游戏屏幕大小，在这里我们设置了其分辨率为 720x480 为例，那么在游戏中，我么设置精灵的位置便可以参照此值，如 左下角 ccp(0,0)，右上角 ccp(720, 480)，而不论 FrameSize 的大小为多少，是 720x480 也好，是 480x320 也罢，总能正确显示其位置，左下角和右上角。能够实现这一点的原因是，固定了设计分辨率大小，从而确定了其固定的宽高比，它的 <strong>优势</strong> 是可以使用具体的数值摆放精灵位置，<strong>不会因为实际屏幕大小宽高比而是内部元素相对位置关系出现混乱</strong>。</p>
+
+<p>而为了保持画面的宽高比，cocos2d-x 做了些牺牲，牺牲了什么呢？kResolutionExactFit 牺牲了画质而保持了全屏显示，对画面进行了拉伸，这意味着什么？意味着相对极端情况下，本来精灵是方形的，显示出来变成长方形，本来圆形的变成了椭圆，固此模式不推荐使用。kResolutionShowAll 为了保持设计画面比例对四周进行留黑边处理，使得不同比例下画面不能全屏。鱼和熊掌不能兼得也 ~</p>
+
+<p>我们可以通过如下方法获取到 <strong>setDesignResolutionSize</strong> 所设置的值：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">CCSize</span> <span class="n">winSize</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getWinSize</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>我们可以用 <a href="http://blog.leafsoar.com/archives/2013/05-05-23.html">Cocos2d-x 程序是如何开始运行与结束的</a> 一文的方法，跟踪 WinSize 的初始化，获取过程，在这里简单提一下，如下步骤：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 获得 winSize</span>
+</span><span class='line'><span class="n">CCSize</span> <span class="n">winSize</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getWinSize</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 查看其 getWinSize(); 方法实现</span>
+</span><span class='line'><span class="p">[</span><span class="n">cocos2dx</span><span class="o">-</span><span class="n">path</span><span class="p">]</span><span class="o">/</span><span class="n">cocos2dx</span><span class="o">/</span><span class="n">CCDirector</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCSize</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">getWinSize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">m_obWinSizeInPoints</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 而 m_obWinSizeInPoints 是何时被赋值的</span>
+</span><span class='line'><span class="p">[</span><span class="n">cocos2dx</span><span class="o">-</span><span class="n">path</span><span class="p">]</span><span class="o">/</span><span class="n">cocos2dx</span><span class="o">/</span><span class="n">platform</span><span class="o">/</span><span class="n">CCEGLViewProtocol</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="n">CCEGLViewProtocol</span><span class="o">::</span><span class="n">setDesignResolutionSize</span><span class="p">(</span><span class="kt">float</span> <span class="n">width</span><span class="p">,</span> <span class="kt">float</span> <span class="n">height</span><span class="p">,</span> <span class="n">ResolutionPolicy</span> <span class="n">resolutionPolicy</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>    <span class="n">m_obDesignResolutionSize</span><span class="p">.</span><span class="n">setSize</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>    <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">m_obWinSizeInPoints</span> <span class="o">=</span> <span class="n">getDesignResolutionSize</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">const</span> <span class="n">CCSize</span><span class="o">&amp;</span> <span class="n">CCEGLViewProtocol</span><span class="o">::</span><span class="n">getDesignResolutionSize</span><span class="p">()</span> <span class="k">const</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">m_obDesignResolutionSize</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>具体的优势：通过设置逻辑分辨率大小，相比无模式，可以帮我们解决了屏幕自动放大缩小问题，并且保持屏幕宽高比，使得游戏更好设计，可以将设计画面大小作为默认背景图片大小等，唯一点遗憾就是那点前面所提到的一点点牺牲。</p>
+
+<p>kResolutionShowAll 方案可以作为我们的默认解决方案，使得游戏的设计更为简化，但为了补填拉伸或留黑边这点缺憾，进入下一个模式！</p>
+
+<h3>kResolutionNoBorder 了解 VisibleSize 与 VisibleOrigin</h3>
+
+<p>此模式可以解决两个问题，其一：游戏画面全屏；其二：保持设置游戏时的宽高比例，相比 kResolutionShowAll 有所区别的是，<strong>为了填补留下的黑边，将画面稍微放大，以至于能够正好补齐黑边</strong>，而这样做的后果可想而知，补齐黑边的同时，另一个方向上将会有一部分画面露出屏幕之外，如下示意图：</p>
+
+<p><img src="/images/2013/screen-resolution-1.jpg" alt="图片" /></p>
+
+<p>黑色边框标示实际的屏幕分辨率，紫色区域标示游戏设计大小，而通过放大缩小，保持宽高比固定，
+可以看到 <strong>Show All</strong> 之中的黑色阴影部分为留边，而 <strong>No Border</strong> 的紫色阴影部分则不能显示，而这紫色区域的大小是游戏设计之时是不可控的。那么原设计的画面大小就失去了 <strong>一定的</strong> 参考价值了，因为这可能让你的画面显示残缺。这时仅仅通过 WinSize 满足不了我们的设计需求，所以引入了 <strong>VisibleSize</strong> 与 <strong>VisibleOrigin</strong> 概念。</p>
+
+<p><img src="/images/2013/screen-resolution-2.png" alt="图片" /></p>
+
+<p>如上所示，紫色区域是被屏幕截去的部分，不可显示的，根据实际情况，可能出现横向截取和竖向截取，这取决于实际分辨率的宽高比。而 A、B、C、D所标示的是设计分辨率，固定大小。如果我们想让一个精灵元素显示在屏幕上方靠边，那么如果使用 WinSize 的高度设置其位置，可能出现的情况就是显示到屏幕之外了。FrameSize 和 WinSize 我们已经知道其概念，而 VisibleSize 和 VisibleOrigin 所代表的是什么呢，又时如何为我们解决靠边的问题！注意上图下方的定义， <strong>VisibleSize = H I J K 是用紫色标注的。</strong> 而在上图是 <strong>黑色</strong> 标注，标示屏幕实际分辨率，虽然 FrameSize 和 VisibleSize 都是 H I J K，但其意义不同，紫色表明它是与设计分辨率相关的。</p>
+
+<p>FrameSize 是实际的屏幕分辨率，而 <strong>VisibleSize 是在 WinSize 之内，保持 FrameSize 的宽高比所能占用的最大区域</strong>，实际屏幕分辨率 H I J K (黑色) 可以大于 WinSize ，但VisibleSize 一定会小于或者等于 WinSize，这两者相同的是宽高比。VisibleSize 有着 WinSize 大小（随WinSize  的大小改变而改变），还有着 FrameSize 的宽高比，它标示 <strong>在设计分辨率（WinSize）下，在屏幕中的可见区域大小。</strong> 而 VisibleOrigin 则标示在设计分辨率下被截取的区域大小，用点 K 标示，有了这些数据，我们想让游戏元素始终在屏幕显示的区域之内不成难事。下面通过几个数值带入，加深这些概念的印象。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 组[1] :</span>
+</span><span class='line'><span class="nl">FrameSize:</span>            <span class="n">width</span> <span class="o">=</span> <span class="mi">720</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">420</span>
+</span><span class='line'><span class="nl">WinSize:</span>          <span class="n">width</span> <span class="o">=</span> <span class="mi">720</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">480</span>
+</span><span class='line'><span class="nl">VisibleSize:</span>      <span class="n">width</span> <span class="o">=</span> <span class="mi">720</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">420</span>
+</span><span class='line'><span class="nl">VisibleOrigin:</span>        <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">30</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 组[2] :相比 组 [1] FrameSize 不变 VisibleSize 和 VisibleOrigin 随着 WinSize 的变小而变小</span>
+</span><span class='line'><span class="nl">FrameSize:</span>            <span class="n">width</span> <span class="o">=</span> <span class="mi">720</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">420</span>
+</span><span class='line'><span class="nl">WinSize:</span>          <span class="n">width</span> <span class="o">=</span> <span class="mi">480</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">320</span>
+</span><span class='line'><span class="nl">VisibleSize:</span>      <span class="n">width</span> <span class="o">=</span> <span class="mi">480</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">280</span>
+</span><span class='line'><span class="nl">VisibleOrigin:</span>        <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">20</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 组[3] : 相比组 [1] WinSize 不变，VisibleSize 随着 FrameSize 的比例改变而改变</span>
+</span><span class='line'><span class="nl">FrameSize:</span>            <span class="n">width</span> <span class="o">=</span> <span class="mi">720</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">540</span>
+</span><span class='line'><span class="nl">WinSize:</span>          <span class="n">width</span> <span class="o">=</span> <span class="mi">720</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">480</span>
+</span><span class='line'><span class="nl">VisibleSize:</span>      <span class="n">width</span> <span class="o">=</span> <span class="mi">640</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">480</span>
+</span><span class='line'><span class="nl">VisibleOrigin:</span>        <span class="n">x</span> <span class="o">=</span> <span class="mi">40</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// WinSize VisibleSize VisibleOrigin 与都设计的分辨率相关，满足如下关系</span>
+</span><span class='line'><span class="n">WinSize</span><span class="p">.</span><span class="n">width</span> <span class="o">=</span> <span class="p">(</span><span class="n">VisibleOrigin</span><span class="p">.</span><span class="n">x</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">VisibleSize</span><span class="p">.</span><span class="n">width</span>
+</span><span class='line'><span class="n">WinSize</span><span class="p">.</span><span class="n">height</span> <span class="o">=</span> <span class="p">(</span><span class="n">VisibleOrigin</span><span class="p">.</span><span class="n">y</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">VisibleSize</span><span class="p">.</span><span class="n">height</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>NoBorder 具体的使用方法可以参考 cocos2d-x 自带例程 <strong>TestCpp</strong> ，有详细的使用方法，并且封装了 <strong>VisibleRect</strong> 类，可以获取设计分辨率，不同比例屏幕之时的主要参考点，屏幕四个拐角，和边的中点等，让我们设置元素位置时，使其总能显示在屏幕之内，这里就不详细介绍了。</p>
+
+<p>基于这几种模式的程序使用方法，cocos2d-x  自带例程或者网上有很多教程，这里只详细解释了其中各种概念，而知道了这些概念，当然用起来就没有多大问题了。</p>
+
+<h2><strong>kResolutionLeafsoar</strong></h2>
+
+<p>！！！这是什么模式！好吧，Leafsoar 是 一叶 的 ID ，或者是本博客的一级域名而已 :P  在 cocos2d-x 中并没有这种模式。除却 <strong>UnKnown</strong> 与 <strong>ExactFit</strong> 不说，ShowAll 的优势是，只需要一个设计分辨率，然后通过 WinSize 设置相对对位即可，而且位置的最大长宽都是确定，方便了开发，但屏幕不能填满， NoBorder 模式的优势是在画面不变形的情况下，实现全屏，显示效果更好，但 WinSize 一定程度失效，需要通过运行时计算 VisibleSize 和 VisibleOrigin 来设置位置，由于是运行时计算，所以也就会出现，各种屏幕显示效果不一样的情况。</p>
+
+<p>ShowAll 和 NoBorder 各有所长，各有所短，而这里提出的新适配解决方案正是取两者之长，舍两者之短的 <strong>组合模式</strong>。简单说来就是用 NoBorder 去实现 ShowAll 的思想。NoBorder 可以保证全屏利用，ShowAll 可以更好的使用实际设计坐标固定位置，而且相对位置不会随宽高比的改变而改变，这在编写游戏的时候能方便不少。先上一个示意图，一目了然 （两个图，两个方向）：</p>
+
+<p><img src="/images/2013/screen-resolution-3.png" alt="图片" /></p>
+
+<p>在原来 NoBorder 模式示意图上添加了新的概念，<strong>LsSize = X Y M N</strong> (leafsoar 简写了，为了不跟 cocos2d-x 的一些概念混淆，什么名字不重要，只要了解其含义即可)，在 NoBorder 模式下的 LsSize 相对于 FrameSize 而言，正如 在 <strong>ShowAll</strong> 模式下的 WinSize 相对于 FrameSize，所以说这是 ShowAll NoBorder 的组合概念，<strong>而这里的 LsSize 与 WinSize 的宽高比是一致的。</strong></p>
+
+<p>猛地一看，似乎把问题复杂化了，仔细一看，还不如猛地一看 ~~</p>
+
+<p>在 ShowAll 中，WinSize 作为最高的宽高，以此参照设置位置，因为在此范围内都能在屏幕上显示，用了 NoBorder 使得四周可能被截去一块区域，而这个区域大小不可控制，所以不能再使用 WinSize 作为参考点来设置位置，而这里的 LsSize 同样，因为 LsSzie 不论在什么情况下，总能显示在屏幕之内，我们可以方便的使用 LsSize  作为坐标系参考，并且可以全屏显示，在配合 VisibleSize ，相比纯的 NoBorder 加强了不少。它可以怎么用？</p>
+
+<p>可以把 LsSize 当作 ShowAll 中的 WinSize 来用，而黑边可以使用稍大的图片填充，或者使用其它<strong>图片修饰边框</strong>，修饰的边框图案可大可小，可长可短，填充屏幕，保持全屏。</p>
+
+<h2>开始基于 LsSize 的游戏设计实现</h2>
+
+<p>为了能够准确实现基于 LsSize 的设计，初步计划将 LsSize 设定在 480x320 的分辨率方案，为此做了些准备，首先不使用任何模式情况下，在场景内调用如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">CCSize</span> <span class="n">size</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getWinSize</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">ccp</span><span class="p">(</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="o">/</span><span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 大小 600x500 为了 NoBorder 看到效果，使用稍大的背景图</span>
+</span><span class='line'><span class="n">CCSprite</span><span class="o">*</span> <span class="n">pb</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;Back.jpg&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">pb</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">center</span><span class="p">);</span>
+</span><span class='line'><span class="k">this</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">pb</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 480x320 此图为使用于设计分辨率 LsSize 的图片</span>
+</span><span class='line'><span class="n">CCSprite</span><span class="o">*</span> <span class="n">pSprite</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;HelloWorld.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">pSprite</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">center</span><span class="p">);</span>
+</span><span class='line'><span class="k">this</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">pSprite</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 37x37 在 480x320 画面的四个拐角处，添加参照</span>
+</span><span class='line'><span class="n">CCSprite</span><span class="o">*</span> <span class="n">p1</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;Peas.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">p1</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccpAdd</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">ccp</span><span class="p">(</span><span class="o">-</span><span class="mi">240</span><span class="p">,</span> <span class="o">-</span><span class="mi">160</span><span class="p">)));</span>
+</span><span class='line'><span class="k">this</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">p1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCSprite</span><span class="o">*</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;Peas.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">p2</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccpAdd</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">ccp</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">160</span><span class="p">)));</span>
+</span><span class='line'><span class="k">this</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">p2</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCSprite</span><span class="o">*</span> <span class="n">p3</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;Peas.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">p3</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccpAdd</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">ccp</span><span class="p">(</span><span class="o">-</span><span class="mi">240</span><span class="p">,</span> <span class="mi">160</span><span class="p">)));</span>
+</span><span class='line'><span class="k">this</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">p3</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCSprite</span><span class="o">*</span> <span class="n">p4</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;Peas.png&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">p4</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">ccpAdd</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">ccp</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="o">-</span><span class="mi">160</span><span class="p">)));</span>
+</span><span class='line'><span class="k">this</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">p4</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>显示效果：(FrameSize = 640x540)
+<img src="/images/2013/screen-resolution-4.jpg" alt="图片" /></p>
+
+<p>显示效果：(ShowAll; FrameSize = 520x320; WinSize = 480x320)
+<img src="/images/2013/screen-resolution-5.jpg" alt="图片" /></p>
+
+<p>显示效果：(NoBorder; FrameSize = 520x320; WinSize = 480x320)
+<img src="/images/2013/screen-resolution-6.jpg" alt="图片" /></p>
+
+<p>通过效果我们可以看到，在相同 FrameSize 下 NoBorder 时，画面由于填充了黑边，将画面放大，以至于上下有部分显示不全，通过拐角四个精灵可以看出。</p>
+
+<p>好！既然我们知道是由于放大所致，那么我们将画面缩小呢？cocos2d-x 提供了一个方法，我们调用如下代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">CCDirector</span> <span class="o">*</span><span class="n">pDirector</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">();</span>
+</span><span class='line'><span class="n">pDirector</span><span class="o">-&gt;</span><span class="n">setContentScaleFactor</span><span class="p">(</span>
+</span><span class='line'>              <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getScaleY</span><span class="p">()</span> <span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>为了弥补画面因需要不填空白出现的方法，我们将画面缩小，放大系数可以通过 <strong>CCEGLView::sharedOpenGLView()&ndash;>getScaleY() </strong> 取得。其实 setContentScaleFactor 方法是为了适配不同资源而设计的，可以用此方法对不同资源适配，缩放等。效果如下：</p>
+
+<p><img src="/images/2013/screen-resolution-7.jpg" alt="图片" /></p>
+
+<p>我们看到 480x320 的图片显示完全正确了，也正是我们想要的效果，但唯一的缺点是 ~~ 拐角处四个精灵的位置依然不是我们想要的，我们设计的位置是以 480x320 设置位置的，而 WinSize 也是 480x320 ，而此时基于 480x320 的设计必然会显示到屏幕之外，而要想不修改精灵位置，而让其显示正确的位置，那么为了保证 LsSize 的固定，我们需要一个方法，那就是 <strong>动态设置 WinSize</strong>。</p>
+
+<p>什么意思？我们知道一般这些模式设计游戏时，是通过 <strong>setDesignResolutionSize</strong> 设置 WinSize 的，这个值在游戏运行其间是定植，动态改变的是 VisibleSize 等，而这里提出了 LsSize 的概念，可想而知，如果 WinSize 固定，那么 LsSize 会随着屏幕宽高比的改变而改变，那么我们反其道而行，固定 <strong>LsSize</strong> 值，那么在运行时可以通过实际的宽高比来算得 WinSize 的值，这样动态算得的 WinSize 值就能够保证我们的 LsSize 是一个定值了。</p>
+
+<p><strong>相对论</strong>，WinSize 与 LsSize 的值是相对的，与其通过固定 WinSize 在运行时动态获得 LsSize （这也是 NoBorder 的默认方式，而导致的结果是 WinSize 没有参考价值），不如我们固定 LsSize 而在运行时算得 WinSize 设置来的要更妙一些。</p>
+
+<p>现在不使用 <strong>setContentScaleFactor</strong> 方法，而修改 <strong>setDesignResolutionSize</strong> 这里的值，我们知道 WinSize 是 480x320 时，LsSize 必然会小于此值，而 NoBorder 的放大系数我们可以通过如下方式算得（可以参考setDesignResolutionSize方法内部实现），并在 AppDelegate 里执行：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">CCSize</span> <span class="n">frameSize</span> <span class="o">=</span> <span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getFrameSize</span><span class="p">();</span>
+</span><span class='line'><span class="c1">// 设置 LsSize 固定值</span>
+</span><span class='line'><span class="n">CCSize</span> <span class="n">lsSize</span> <span class="o">=</span> <span class="n">CCSizeMake</span><span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="mi">320</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">float</span> <span class="n">scaleX</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span> <span class="n">frameSize</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="n">lsSize</span><span class="p">.</span><span class="n">width</span><span class="p">;</span>
+</span><span class='line'><span class="kt">float</span> <span class="n">scaleY</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span> <span class="n">frameSize</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="n">lsSize</span><span class="p">.</span><span class="n">height</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 定义 scale 变量</span>
+</span><span class='line'><span class="kt">float</span> <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">;</span> <span class="c1">// MAX(scaleX, scaleY);</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">scaleX</span> <span class="o">&gt;</span> <span class="n">scaleY</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// 如果是 X 方向偏大，那么 scaleX 需要除以一个放大系数，放大系数可以由枞方向获取，</span>
+</span><span class='line'>  <span class="c1">// 因为此时 FrameSize 和 LsSize 的上下边是重叠的</span>
+</span><span class='line'>  <span class="n">scale</span> <span class="o">=</span> <span class="n">scaleX</span> <span class="o">/</span> <span class="p">(</span><span class="n">frameSize</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span> <span class="n">lsSize</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">scale</span> <span class="o">=</span> <span class="n">scaleY</span> <span class="o">/</span> <span class="p">(</span><span class="n">frameSize</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span> <span class="n">lsSize</span><span class="p">.</span><span class="n">width</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCLog</span><span class="p">(</span><span class="s">&quot;x: %f; y: %f; scale: %f&quot;</span><span class="p">,</span> <span class="n">scaleX</span><span class="p">,</span> <span class="n">scaleY</span><span class="p">,</span> <span class="n">scale</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 根据 LsSize 和屏幕宽高比动态设定 WinSize</span>
+</span><span class='line'><span class="n">CCEGLView</span><span class="o">::</span><span class="n">sharedOpenGLView</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">setDesignResolutionSize</span><span class="p">(</span><span class="n">lsSize</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span>
+</span><span class='line'>      <span class="n">lsSize</span><span class="p">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">kResolutionNoBorder</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>显示效果：（NoBorder 模式 ;FrameSize = 520x320; LsSize = 480x320; WinSize = 动态获取）
+<img src="/images/2013/screen-resolution-8.jpg" alt="图片" /></p>
+
+<p>我们看到在没有修改源代码，并且在设计中使用 480x320 的参考系，也既是基于  LsSize 的设计显示效果如我们预期，那么我们换一个 FrameSize 来看看是否能够自动适应呢？如下：</p>
+
+<p>显示效果：（NoBorder 模式 ;FrameSize = 600x480; LsSize = 480x320; WinSize = 动态获取）
+<img src="/images/2013/screen-resolution-9.jpg" alt="图片" /></p>
+
+<p>到此，基于 LsSize 参考系的游戏设计已经完成了，这样做的好处是很明显的，集 ShowAll 和 NoBorder 的优点于一处，这里的图片元素是为了好定位，实现的需要而写的，具体场景可以使用背景地图，或一张大的图片显示，而没有任何影响，也可以继续使用 VisibleSize 得到 LsSize 之外的部分区域大小，在 LsSize 之外可以使用背景图片作为装饰，即保证了游戏的全屏，又保证了游戏设计时的方便，如果使用完全基于 LsSize  的设计实现，除了显示背景装饰之外，我们不想让 LsSize 的内部元素显示到 LsSize 之外如何做呢？我们只需要设定 LsSize 层的的显示区域即可，我们可以修改场景的实现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// 这里先简单实现思路</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CCScene</span><span class="o">*</span> <span class="n">HelloWorld</span><span class="o">::</span><span class="n">scene</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">CCScene</span> <span class="o">*</span><span class="n">scene</span> <span class="o">=</span> <span class="n">CCScene</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// 创建背景层</span>
+</span><span class='line'>  <span class="n">CCLayer</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="n">CCLayer</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>  <span class="n">scene</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 添加背景图片和设置位置，可以使用其它装饰，或者小图片屏幕都行</span>
+</span><span class='line'>  <span class="n">CCSize</span> <span class="n">size</span> <span class="o">=</span> <span class="n">CCDirector</span><span class="o">::</span><span class="n">sharedDirector</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getWinSize</span><span class="p">();</span>
+</span><span class='line'>  <span class="n">CCPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">ccp</span><span class="p">(</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="o">/</span><span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">CCSprite</span><span class="o">*</span> <span class="n">pb</span> <span class="o">=</span> <span class="n">CCSprite</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;Back.jpg&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">setPosition</span><span class="p">(</span><span class="n">center</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">b</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">pb</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// 创建 LsLayer 层</span>
+</span><span class='line'>  <span class="n">HelloWorld</span> <span class="o">*</span><span class="n">lsLayer</span> <span class="o">=</span> <span class="n">HelloWorld</span><span class="o">::</span><span class="n">create</span><span class="p">();</span>
+</span><span class='line'>  <span class="n">scene</span><span class="o">-&gt;</span><span class="n">addChild</span><span class="p">(</span><span class="n">lsLayer</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="n">scene</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 在 HelloWorld 中重写 visit() 函数 设定显示区域</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">HelloWorld</span><span class="o">::</span><span class="n">visit</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">glEnable</span><span class="p">(</span><span class="n">GL_SCISSOR_TEST</span><span class="p">);</span>              <span class="c1">// 开启显示指定区域</span>
+</span><span class='line'>  <span class="c1">// 在这里只写上固定值，在特性环境下，以便快速看效果，实际的值，需要根据实际情况算得</span>
+</span><span class='line'>  <span class="n">glScissor</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">480</span><span class="p">,</span> <span class="mi">320</span><span class="p">);</span>     <span class="c1">// 只显示当前窗口的区域</span>
+</span><span class='line'>  <span class="n">CCLayer</span><span class="o">::</span><span class="n">visit</span><span class="p">();</span>                       <span class="c1">// 调用下面的方法</span>
+</span><span class='line'>  <span class="n">glDisable</span><span class="p">(</span><span class="n">GL_SCISSOR_TEST</span><span class="p">);</span>             <span class="c1">// 禁用</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>显示效果：（NoBorder 模式 ;FrameSize = 520x320; LsSize = 480x320; WinSize = 动态获取）
+<img src="/images/2013/screen-resolution-10.jpg" alt="图片" /></p>
+
+<h2>屏幕适配新解</h2>
+
+<p>看完这篇文章想必对 cocos2d-x 的屏幕适配方案及其原理有了相当的认识，从内部提供的三种模式，再到我们自定义基于 LsSize 的 <strong>Leafsoar 模式</strong> (好把，因该叫做 ShowAllNoBorder)。这里已经给出了完全的实现原理以及实现方法，并配有效果图，当然这其中还有些细节需要注意，比如我们基于 LsSize 的大小设计，那么实际的图片肯定需要比 LsSize 的要大，大多少，太小了不够适应，太大了又浪费，如何取舍等问题，这一点取决的因素是什么，留给读者思考 ~~</p>
+
+<p>一叶将在 GitHub 处建立一个<a href="https://github.com/leafsoar/ls-cocos2d-x/tree/master/ScreenSolutions">ScreenSolutions</a> 项目，读者可以从这里参考实现的方案。(也许<strong>此时</strong>在 GitHub 所看到的实现并不完全，但已经有了简单的实现方法，并且能够运行，如有必要，将会新写一篇博客，去实现 ScreenSolutions 并且解说)</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">一叶</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-10T19:02:00+08:00" pubdate data-updated="true">May 10<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/archives/2013/05-08.html" title="Previous Post: 实现 Cocos2d-x 全局定时器">&laquo; 实现 Cocos2d-x 全局定时器</a>
+      
+      
+        <a class="basic-alignment right" href="/archives/2013/05-13.html" title="Next Post: Cocos2d-x 屏幕适配新解 - 兼容与扩展">Cocos2d-x 屏幕适配新解 - 兼容与扩展 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

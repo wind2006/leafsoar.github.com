@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://leafsoar.github.io/sitemap.xml 

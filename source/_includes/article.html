@@ -27,5 +27,12 @@
     </footer>
   {% endif %}
 {% else %}
-<div class="entry-content">{{ content }}</div>
+<div class="entry-content">
+  <p>
+	<a href='http://blog.leafsoar.com' rel='bookmark' title='【无间落叶:无有入无间 ~】'>[叶落归根]</a>：
+	<a href='{{ site.url }}{{ page.url }}' rel='bookmark'
+           title='{{ page.title }}'>{{ site.url }}{{ page.url }}</a>    
+  </p>  
+  {{ content }}
+</div>
 {% endif %}

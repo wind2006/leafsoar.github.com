@@ -9,7 +9,7 @@
   <meta name="author" content="一叶">
 
   
-  <meta name="description" content="cocos2d-x 中有自己的定时器实现，一般用法是在场景，层等内部实现，定时器的生命周期随着它们的消亡而消亡，就运行周期而言，相对最长的是场景，如果在多个场景切换并且保持定时器的运行，那我们就需要定义一个自己的 全局定时器。 平时所使用的定时器，我们可以直接使用，是因为 CCNode &hellip;">
+  <meta name="description" content="[叶落归根]： <a href='http://blog.leafsoar.com/archives/2013/05-08.html' rel='bookmark' title='实现 Cocos2d-x 全局定时器'>http://blog.leafsoar.com/archives/2013 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -110,7 +110,13 @@
   </header>
 
 
-<div class="entry-content"><p>cocos2d-x 中有自己的定时器实现，一般用法是在场景，层等内部实现，定时器的生命周期随着它们的消亡而消亡，就运行周期而言，相对最长的是场景，如果在多个场景切换并且保持定时器的运行，那我们就需要定义一个自己的  <strong>全局定时器</strong>。</p>
+<div class="entry-content">
+  <p>
+	<a href='http://blog.leafsoar.com' rel='bookmark' title='【无间落叶:无有入无间 ~】'>[叶落归根]</a>：
+	<a href='http://blog.leafsoar.com/archives/2013/05-08.html' rel='bookmark'
+           title='实现 Cocos2d-x 全局定时器'>http://blog.leafsoar.com/archives/2013/05-08.html</a>    
+  </p>  
+  <p>cocos2d-x 中有自己的定时器实现，一般用法是在场景，层等内部实现，定时器的生命周期随着它们的消亡而消亡，就运行周期而言，相对最长的是场景，如果在多个场景切换并且保持定时器的运行，那我们就需要定义一个自己的  <strong>全局定时器</strong>。</p>
 
 <p>平时所使用的定时器，我们可以直接使用，是因为 <strong>CCNode</strong> 帮我们实现了定时器的封装，一个简单的做法，是定义个全局的静态 CCNode 对象，在程序运行之初初始化，并执行其定时器任务，而不由任何场景所管理即可实现，但在这里，一叶对定时器的内部实现稍作了解后，封装了自己实现的全局定时解决方案，代码如下(<a href="https://github.com/leafsoar/ls-cocos2d-x/tree/master/Learn/Classes/GlobalSchedule">获取源码</a> )：</p>
 
@@ -359,6 +365,7 @@
 <p>在前面的博文 <a href="http://blog.leafsoar.com/archives/2013/05-05-23.html">Cocos2d-x 程序是如何开始运行与结束的</a>，我们分析了 cocos2d-x 程序运行的始末，故推荐在此时调用停止定时器的方法。</p>
 
 <p>有了全局定时器我们能做什么？这就要问你为何而实现全局定时器了 : P</p>
+
 </div>
 
 

@@ -9,7 +9,7 @@
   <meta name="author" content="一叶">
 
   
-  <meta name="description" content="题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力 问题的由来 怎么样使用 Cocos2d-x 快速开发游戏，方法很简单，你可以看看其自带的例程，或者从网上搜索教程，运行起第一个 Scene HelloWorldScene，然后在 HelloWorldScene &hellip;">
+  <meta name="description" content="[叶落归根]： <a href='http://blog.leafsoar.com/archives/2013/05-05.html' rel='bookmark' title='Cocos2d-x 程序是如何开始运行与结束的'>http://blog.leafsoar.com/archives &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -110,7 +110,13 @@
   </header>
 
 
-<div class="entry-content"><p><strong>题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力</strong></p>
+<div class="entry-content">
+  <p>
+	<a href='http://blog.leafsoar.com' rel='bookmark' title='【无间落叶:无有入无间 ~】'>[叶落归根]</a>：
+	<a href='http://blog.leafsoar.com/archives/2013/05-05.html' rel='bookmark'
+           title='Cocos2d-x 程序是如何开始运行与结束的'>http://blog.leafsoar.com/archives/2013/05-05.html</a>    
+  </p>  
+  <p><strong>题记：对于技术，我们大可不必挖得那么深，但一定要具备可以挖得很深的能力</strong></p>
 
 <h2>问题的由来</h2>
 
@@ -911,6 +917,7 @@
 <p>在本文通过解决一个小疑问，而去分析 cocos2d-x 游戏的运行流程，当然其中很多细致末叶我们并没有深入下去。不去解决这个疑问也可以，知道没有调用析构函数，那我就不调用便是 （这也是简单的解决方法，也不用觉得这不可行 ）。这里只是借着这个疑问，对 cocos2d-x 的流程稍作探寻而已。也没有贴一堆 cocos2d-x 源码去分析，其思路也有迹可循。</p>
 
 <p>什么是 cocos2d-x ,它是 cocos2d 一个 C++ 的实现，除 C++ 之外，有 python ，Objective-C 等其它语言的实现，那该怎么去理解 cocos2d ，可以这么理解，cocos2d 是一个编写 2D 游戏的通用形框架，这种框架提供了一个通用模型，而这种模型或者说架构是 <strong>无关语言与平台</strong> 的，说 cocos2d-x 使用 C++ 编写，其跨平台能力很强，但它能跑在浏览器上么？cocos2d 还是有着 html5  的实现，当然平台决定着语言的选择，而 cocos2d 能够适应这么多不同的语言和平台，其良好的设计，清晰的结构功不可没。 而对不同语言，对相同功能有着不同的封装，正如在本文问题中，在不同平台（Linux 和 Android），对相同功能有着不同的封装异曲同工。那么封装到最后，我们对 cocos2d  的理解就只剩下了，我们要写游戏，那么需要导演，场景、层、精灵、动作等 <del>~ 组织好这个中之间的关系即可 </del></p>
+
 </div>
 
 

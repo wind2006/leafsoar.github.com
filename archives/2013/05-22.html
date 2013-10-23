@@ -9,7 +9,7 @@
   <meta name="author" content="一叶">
 
   
-  <meta name="description" content="使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其“机制”，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用， &hellip;">
+  <meta name="description" content="[叶落归根]： <a href='http://blog.leafsoar.com/archives/2013/05-22.html' rel='bookmark' title='Cocos2d-x 内存管理浅说'>http://blog.leafsoar.com/archives/2013/ &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -110,7 +110,13 @@
   </header>
 
 
-<div class="entry-content"><p>使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其<strong>“机制”</strong>，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用，固为浅说。</p>
+<div class="entry-content">
+  <p>
+	<a href='http://blog.leafsoar.com' rel='bookmark' title='【无间落叶:无有入无间 ~】'>[叶落归根]</a>：
+	<a href='http://blog.leafsoar.com/archives/2013/05-22.html' rel='bookmark'
+           title='Cocos2d-x 内存管理浅说'>http://blog.leafsoar.com/archives/2013/05-22.html</a>    
+  </p>  
+  <p>使用过 Cocos2d-x 都知道，其中有一套自己实现的内存管理机制，不同于一般 C++ 的编写常规，而在使用前，了解其原理是有必要的，网上已经有很多对内部实现详细解说的文章。而对于使用者而言，并不需要对其内部有很深的了解，注重其<strong>“机制”</strong>，而非内部实现，在这里只是简单的聊一聊它的管理方式以及使用，固为浅说。</p>
 
 <h2>无用对象 与 管理对象</h2>
 
@@ -689,6 +695,7 @@
 <p>自动管理，所谓自动管理就是通过 <code>create()</code> 方法创建的对象（当然其内部是通过 autorelease() 方法标示，create 只是提供一个统一的创建对象方式），而什么又是有用无用呢，文中我们看到 <code>retain()</code> 和 <code>release()</code>，而这就是有用无用的实现原理，使用就 retain ，移除使用就用 release，再细究内部，可知里面维护了一个引用计数，从而判断是否被使用 ，而前文我们知道 layer->addChild(obj)，那么 obj 就为 layer 所用，究其本质，也是其内部调用了其 retain 等方法，可以阅读官方相关文档，有详细的说明，而本文多是以抽象的概念解说其设计理念，从使用者的角度分析在使用过程中可能会出现的问题，因为要想达到相同的自动管理效果，实现方式可以有很多种。别太注重细节，如果有什么疑问，可以像这样，通过几个小例程去验证我们的想法。对于本文，也只是我对 cocos2d-x 自动管理的理解，如果在实现和概念上有什么说的不对，还请指出，毕竟是 <strong>浅说</strong> ～</p>
 
 <p>cocos2d-x 主要以 CCNode 为基类的树形结构组织管理，所以本文所创建的例程，基于 CCNode 编写，当然内存的自动管理还有很多内容，比如缓存的实现，消息机制对象的生命周期等。但基于谁使用，谁处理的原则，思路倒也明晰 ~</p>
+
 </div>
 
 

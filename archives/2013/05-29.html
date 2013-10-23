@@ -9,7 +9,7 @@
   <meta name="author" content="一叶">
 
   
-  <meta name="description" content="使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 复合机制 下，使得出现内存问题的概率直线飙升 ~ 而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d- &hellip;">
+  <meta name="description" content="[叶落归根]： <a href='http://blog.leafsoar.com/archives/2013/05-29.html' rel='bookmark' title='Cocos2d-x 内存管理的一种实现'>http://blog.leafsoar.com/archives/ &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -110,7 +110,13 @@
   </header>
 
 
-<div class="entry-content"><p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
+<div class="entry-content">
+  <p>
+	<a href='http://blog.leafsoar.com' rel='bookmark' title='【无间落叶:无有入无间 ~】'>[叶落归根]</a>：
+	<a href='http://blog.leafsoar.com/archives/2013/05-29.html' rel='bookmark'
+           title='Cocos2d-x 内存管理的一种实现'>http://blog.leafsoar.com/archives/2013/05-29.html</a>    
+  </p>  
+  <p>使用 Cocos2d-x 编写游戏，常被人吐槽，吐槽什么，当然是内存管理，C++ 的使用本以不易，而在 Cocos2d-x 添加了半内存自动管理，在这么一种 <strong>复合机制</strong> 下，使得出现内存问题的概率直线飙升 ~</p>
 
 <p>而关于这一点，可能在于并没有一个通用的合理的内存管理方式，能够更好的使用 Cocos2d-x ，或者说，缺少那么一种 <strong>规范</strong>，如果存在了这么一种 <strong>规范</strong>，而使得 Cocos2d-x 更为简单优雅，那势必是游戏的开发过程，更加从新所欲，把重点放在游戏本身的设计之上。</p>
 
@@ -628,6 +634,7 @@
 <h3>为什么 LUser 继承自 CCObject</h3>
 
 <p>如果不集成自 CCObject 而使用原来的 C++ 方式也并无不可，但 CCObject 的优势是很明显的，如果能够善于使用。如果你想在 cocos2d-x 一个CCNode绑定数据有 setUserObject() 方法，如果多个 LUser 那么可以用 CCArray 进行管理，如果你想使用通知功能 CCNotificationCenter，而此  LUser 是可被传递的，我们设置了 LUser 然后靠诉别人我更新了，发送一条通知，谁对这个通知感兴趣，那谁就自己处理去吧 ~ 如果 ~ 如果你对此文感兴趣，不妨一试 ~</p>
+
 </div>
 
 

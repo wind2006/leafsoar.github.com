@@ -9,7 +9,7 @@
   <meta name="author" content="一叶">
 
   
-  <meta name="description" content="如果 Cocos2d-x 内存管理浅说 做为初步认识，而 Cocos2d-x 内存管理的一种实现做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。知其然，知其所以然 ~或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计 &hellip;">
+  <meta name="description" content="[叶落归根]： <a href='http://blog.leafsoar.com/archives/2013/06-04.html' rel='bookmark' title='深入理解 Cocos2d-x 内存管理'>http://blog.leafsoar.com/archives/ &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -110,7 +110,13 @@
   </header>
 
 
-<div class="entry-content"><p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
+<div class="entry-content">
+  <p>
+	<a href='http://blog.leafsoar.com' rel='bookmark' title='【无间落叶:无有入无间 ~】'>[叶落归根]</a>：
+	<a href='http://blog.leafsoar.com/archives/2013/06-04.html' rel='bookmark'
+           title='深入理解 Cocos2d-x 内存管理'>http://blog.leafsoar.com/archives/2013/06-04.html</a>    
+  </p>  
+  <p>如果 <a href="http://blog.leafsoar.com/archives/2013/05-22-23.html">Cocos2d-x 内存管理浅说</a> 做为初步认识，而 <a href="http://blog.leafsoar.com/archives/2013/05-29-10.html">Cocos2d-x 内存管理的一种实现</a>做为进阶使用，那么本文将详细的分析一下 Cocos2d-x 的内存管理的设计实现和原理。<strong>知其然，知其所以然 ~</strong>或者说：嗯，它这么做，一定是有原因的，体会设计者的用意，感同身受，如果是你，将会如何设计！~~</p>
 
 <p>我觉得 <strong>最好的学习方式是以自己的语言组织，说与别人听 ～</strong> 这样对自己：更容易发现平时容易忽略的问题，对别人：或多或少也有所助益！以学习为目的，而别人的受益算是附带的效果，这样一个出发点 ~</p>
 
@@ -769,6 +775,7 @@
 <p>关于 cocos2d-x 的内存管理从使用到原理，系列文章就到这里了！（三篇也算系列 = =!） 由表象到内部的思考探索过程，其实在 <strong>浅说</strong> 当中对 cocos2d-x 的使用，便已经能够知晓内部细节设计之一二，透过现象看本质！三篇文章包含了，使用浅说（简单的测试），一种防止内存泄漏的设计（加强链式反应），最后纵览 cocos2d-x 的内存管理框架，对 CCObject 的生命周期做了简单的说明，当然其中还是隐藏一些细节的，比如管理都是用 CCArray 来管理，但我们并没有对 CCArray 做介绍，它是如何添加元素，如何引用等。在任何时候我们只针对一个问题进行思考，那我们该把 CCArray 这样的辅助工具类放在何处，如果你了解当然最好，不过不了解，那便 <strong>存疑</strong> ，然后对相应的问题，分而治之 ~</p>
 
 <p><strong>存疑</strong> 可以帮助一叶在某个时刻只针对某一个问题进行思考，从而使问题变的简单。对文中所涉及的到的两个类 <code>CCPoolManager</code> 和 <code>CCAutoreleasePool</code> 其中所有的方法并没有面面俱到，当然有了整体思路，去 <strong>填充那些</strong> 小疑问将会变得简单。</p>
+
 </div>
 
 

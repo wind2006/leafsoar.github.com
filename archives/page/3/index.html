@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>/无间落叶</title>
+  <meta name="author" content="一叶">
+
+  
+  <meta name="description" content="Cocos2d-x 跨平台特性分析 作为一款跨平台的 2D 游戏引擎 Cocos2d-x ，方便发布到各种移动平台，支持也在不断完善。可以跨平台运行，更据优势的是可以跨平台开发！ 作为运行平台来说，目前主要以 iOS 和 Android 平台为多，对其它平台也有支持，如 BlackBerry 平台 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.leafsoar.com/archives/page/3/index.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="/无间落叶" type="application/atom+xml">
+  <!-- font-family: 'Knewave', cursive; -->
+<link href='http://fonts.googleapis.com/css?family=Knewave' rel='stylesheet' type='text/css'>
+<!-- font-family: 'Cantata One', serif; -->
+<link href='http://fonts.googleapis.com/css?family=Cantata+One' rel='stylesheet' type='text/css'>
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-34041741-6']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1>
+      <a href="/">/无间落叶</a>
+      
+        <span>无有入无间 ～</span>
+      
+  </h1>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.leafsoar.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Home</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/cocos2d-x">Cocos2d-x</a></li>
+  <li><a href="/about">About</a></li>  
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-17.html">Linux 环境 Cocos2d-x开发</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-17T17:30:00+08:00" pubdate data-updated="true">Apr 17<span>th</span>, 2013</time>
+        
+         | <a href="/archives/2013/04-17.html#disqus_thread">Comments</a>
+        
+        
+          | 
+
+<span class="categories">
+  
+    <a class='category' href='/archives/category/cocos2d-x/'>Cocos2d-x</a>
+  
+</span>
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Cocos2d-x 跨平台特性分析</h2>
+
+<p>作为一款跨平台的 2D 游戏引擎 <a href="http://cocos2d-x.org/">Cocos2d-x</a> ，方便发布到各种移动平台，支持也在不断完善。可以跨平台运行，更据优势的是可以跨平台开发！</p>
+
+<p>作为运行平台来说，目前主要以 <strong>iOS</strong> 和 <strong>Android</strong> 平台为多，对其它平台也有支持，如 <strong>BlackBerry </strong>平台，但基本只要满足前两者，就能达到我们跨平台运行的目的，这是由用户量决定的。</p>
+
+<p>作为开发平台来说，常用的三种 <strong>IDE</strong>(集成开发环境) 开发方式：</p>
+
+<ul>
+<li><strong>Windows</strong> 系统下使用 <strong>Visual Stuido</strong> 开发</li>
+<li><strong>Mac</strong> 系统下使用 <strong>Xcode</strong> 开发</li>
+<li><strong>Linux</strong> 系统下使用 <strong>Eclipse + CDT</strong> 开发</li>
+</ul>
+
+
+<p>用过 Xcode 的人都说 Xcode 好用（ps:我没用过 :P），这是一套完整的开发环境，基于 <strong>llvm</strong> 的编译器，优秀的架构提供非常完善的工具链，先且不说，还有快速的模拟器，使开发过程流畅， Windows 平台的标准 IDE VS 也是易于使用，有 cocos2d-x 在 VS 中的项目模板，使开发简化了许多，并且直生成 Win32 可执行程序，即时看到运行效果。而使用 Eclipse 在 Linux 上开发 cocos2d-x 的人相对较少。并没有多少体会这样开发有什么优势！</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-17.html">Read more &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/archives/2013/04-16.html">初见</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-16T17:30:00+08:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
+        
+         | <a href="/archives/2013/04-16.html#disqus_thread">Comments</a>
+        
+        
+          | 
+
+
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>天下至柔 驰骋天下至坚 无间落叶 无有入无间 ~</h2>
+
+<p><img src="/images/2013/leafsoar.jpg" title="物本清华 心若琉璃 亦如止水 亦如明镜 此时只道是寻常 ~" alt="leafsoar" /></p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/archives/2013/04-16.html">Read more &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/archives/page/2/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/archives/2013/07-27.html">CCScrollView 实现帮助界面、关卡选择</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/06-04.html">深入理解 Cocos2d-x 内存管理</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-29.html">Cocos2d-x 内存管理的一种实现</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-25.html">多层 UI 触摸事件的轻量级设计</a>
+      </li>
+    
+      <li class="post">
+        <a href="/archives/2013/05-22.html">Cocos2d-x 内存管理浅说</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/leafsoar">@leafsoar</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'leafsoar',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - 一叶 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> and <a href="https://github.com/gluttony/object-octopress-theme">Object</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'leafsoar';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
